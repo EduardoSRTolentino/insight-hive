@@ -3,3 +3,8 @@ langchain-core
 langchain-community
 langchain-ollama
 langgraph
+fastapi
+uvicorn[standard]
+python-multipart
+pyjwt
+python-dotenv

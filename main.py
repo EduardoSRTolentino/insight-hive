@@ -1,13 +1,16 @@
 """Ponto de entrada do sistema multiagente: loop de interação no terminal."""
 
+from file_input import FileInputError, load_file_input
 from graph.builder import compiled_graph
 
 
 def run() -> None:
     while True:
-        entrada = input("Digite a entrada para análise: ").strip()
-        if not entrada:
-            print("A entrada não pode ser vazia.")
+        caminho = input("Digite o caminho do arquivo (.csv ou .json) para análise: ").strip()
+        try:
+            entrada = load_file_input(caminho)
+        except FileInputError as exc:
+            print(f"Erro: {exc}\n")
             continue
 
         resultado = compiled_graph.invoke({"input": entrada, "reports": []})

@@ -1,0 +1,30 @@
+"""Rota de análise: upload de .csv/.json que aciona o sistema multiagente."""
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+
+from file_input import FileInputError, parse_file_content
+from graph.builder import compiled_graph
+from security import get_current_user
+
+router = APIRouter(prefix="/analysis", tags=["analysis"])
+
+
+@router.post("/upload")
+def upload(
+    file: UploadFile,
+    current_user: str = Depends(get_current_user),
+) -> dict:
+    content = file.file.read()
+
+    try:
+        entrada = parse_file_content(file.filename, content)
+    except FileInputError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    resultado = compiled_graph.invoke({"input": entrada, "reports": []})
+
+    return {
+        "triage": resultado.get("triage", ""),
+        "selected_agents": resultado.get("selected_agents", []),
+        "final_report": resultado.get("final_report", ""),
+    }
