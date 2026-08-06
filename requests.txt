@@ -1,5 +1,0 @@
-!pip install langchain -q
-!pip install langchain-core -q
-!pip install langchain-community -q
-!pip install langchain-ollama -q
-!pip install langgraph -q
