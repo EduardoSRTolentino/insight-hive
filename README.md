@@ -9,11 +9,12 @@ uma aplicação web com login (FastAPI + React).
 - Python 3.11+
 - Node.js 18+
 - [Ollama](https://ollama.com/) rodando localmente, com o modelo configurado em
-  [`config/agents_config.py`](config/agents_config.py) já baixado (ex.: `ollama pull gpt-oss:20b`)
+  [`backend/config/agents_config.py`](backend/config/agents_config.py) já baixado (ex.: `ollama pull gpt-oss:20b`)
 
 ## Backend (FastAPI)
 
 ```bash
+cd backend
 pip install -r requirements.txt
 cp .env.example .env   # ajuste as credenciais/segredo se quiser
 uvicorn api:app --reload --port 8000
@@ -41,6 +42,7 @@ A aplicação sobe em `http://localhost:5173`. Faça login e envie um arquivo
 ## Uso via terminal (sem web)
 
 ```bash
+cd backend
 pip install -r requirements.txt
 python main.py
 ```
