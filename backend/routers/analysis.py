@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from file_input import FileInputError, parse_file_content
 from graph.builder import compiled_graph
-from schemas.intelligence_card import empty_intelligence_card, parse_intelligence_card
+from schemas.intelligence_card import parse_intelligence_card
 from security import get_current_user
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
@@ -27,7 +27,5 @@ def upload(
     return {
         "triage": resultado.get("triage", ""),
         "selected_agents": resultado.get("selected_agents", []),
-        "final_report": parse_intelligence_card(
-            resultado.get("final_report") or empty_intelligence_card()
-        ),
+        "final_report": parse_intelligence_card(resultado.get("final_report")),
     }

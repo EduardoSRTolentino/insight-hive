@@ -168,6 +168,11 @@ button.secondary:hover:not(:disabled) {
   gap: 12px;
   align-items: flex-start;
   padding: 14px 0;
+  border-bottom: 1px solid var(--intel-line);
+}
+
+.intelligence-card-item:last-child {
+  border-bottom: none;
 }
 
 .intelligence-card-dot {
@@ -203,6 +208,49 @@ button.secondary:hover:not(:disabled) {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1;
+}
+
+.intelligence-card-trigger {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.intelligence-card-trigger:hover .intelligence-card-value {
+  color: #ffffff;
+}
+
+.intelligence-card-trigger-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.intelligence-card-chevron {
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  border-right: 2px solid var(--intel-muted);
+  border-bottom: 2px solid var(--intel-muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.intelligence-card-item.is-expanded .intelligence-card-chevron {
+  margin-top: 10px;
+  transform: rotate(-135deg);
 }
 
 .intelligence-card-label {
@@ -216,4 +264,49 @@ button.secondary:hover:not(:disabled) {
   font-weight: 600;
   line-height: 1.35;
   word-break: break-word;
+}
+
+.intelligence-card-detail {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.intelligence-card-analise {
+  margin: 0;
+  color: var(--intel-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.intelligence-card-evidencias {
+  margin-top: 10px;
+}
+
+.intelligence-card-evidencias-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--intel-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.intelligence-card-evidencias ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.intelligence-card-evidencias li {
+  color: var(--intel-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+
+.intelligence-card-evidencias li:last-child {
+  margin-bottom: 0;
 }
