@@ -96,16 +96,24 @@ def manager_triage(state: State) -> dict[str, Any]:
     return {"triage": triage_text, "selected_agents": selected_agents}
 
 
+def _truncate(text: str, max_chars: int) -> str:
+    text = text or ""
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 20].rstrip() + "\n...[truncado]"
+
+
 def manager_synthesis(state: State) -> dict[str, Any]:
     """Consolida os relatórios dos especialistas em um Card de Inteligência."""
+    # Mantém o prompt da síntese sob controle para evitar crash do Ollama.
     reports_text = "\n\n".join(
-        f"### Relatório: {report['agent_name']}\n{report['content']}"
+        f"### Relatório: {report['agent_name']}\n{_truncate(report['content'], 1200)}"
         for report in state["reports"]
     )
     user_content = (
-        f"Entrada original do usuário:\n{state['input']}\n\n"
-        f"Análise preliminar do gestor:\n{state['triage']}\n\n"
-        f"Relatórios dos especialistas:\n{reports_text}"
+        f"Entrada original do usuário:\n{_truncate(state['input'], 4000)}\n\n"
+        f"Análise preliminar do gestor:\n{_truncate(state['triage'], 800)}\n\n"
+        f"Relatórios dos especialistas:\n{_truncate(reports_text, 6000)}"
     )
     raw_response = invoke_agent(MANAGER_SYNTHESIS_SYSTEM_PROMPT, user_content)
     return {"final_report": parse_intelligence_card(raw_response)}
