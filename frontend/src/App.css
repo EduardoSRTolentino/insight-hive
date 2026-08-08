@@ -125,3 +125,95 @@ button.secondary:hover:not(:disabled) {
   font-family: var(--mono);
   font-size: 13px;
 }
+
+.intelligence-card {
+  --intel-bg: #1a2639;
+  --intel-text: #f3f6fb;
+  --intel-muted: #9aa8bc;
+  --intel-line: rgba(255, 255, 255, 0.1);
+
+  background: var(--intel-bg);
+  color: var(--intel-text);
+  border-radius: 12px;
+  padding: 20px 20px 8px;
+  margin-top: 8px;
+}
+
+.intelligence-card-header {
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--intel-line);
+}
+
+.intelligence-card-header h2 {
+  margin: 0 0 6px;
+  color: var(--intel-text);
+  font-size: 18px;
+}
+
+.intelligence-card-conta {
+  margin: 0;
+  color: var(--intel-muted);
+  font-size: 13px;
+}
+
+.intelligence-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.intelligence-card-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+}
+
+.intelligence-card-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.intelligence-card-dot.tone-orange {
+  background: #f0a35e;
+}
+
+.intelligence-card-dot.tone-red {
+  background: #e25b5b;
+}
+
+.intelligence-card-dot.tone-green {
+  background: #4caf7a;
+}
+
+.intelligence-card-dot.tone-teal {
+  background: #3db8b0;
+}
+
+.intelligence-card-dot.tone-grey {
+  background: #8b95a5;
+}
+
+.intelligence-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.intelligence-card-label {
+  color: var(--intel-muted);
+  font-size: 12px;
+}
+
+.intelligence-card-value {
+  color: var(--intel-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}

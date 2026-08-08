@@ -1,0 +1,26 @@
+speaker,text,start,end
+Ana Costa,"Bom dia pessoal, tudo bem?",00:00:02,00:00:05
+Bruno Alves,"Oi, tudo bem!",00:00:06,00:00:08
+Carla Mendes,"Olá, boa tarde.",00:00:08,00:00:10
+Ana Costa,"Obrigada pela presença. Vamos começar a daily do produto.",00:00:11,00:00:16
+Bruno Alves,"Hum, então, tipo, eu eu revisei o backlog ontem.",00:00:18,00:00:24
+Bruno Alves,"A gente a gente precisa priorizar a integração com o CRM até sexta.",00:00:24,00:00:30
+Carla Mendes,Uhum,00:00:31,00:00:32
+Carla Mendes,"Concordo. Sem o CRM o funil de leads fica inconsistente.",00:00:33,00:00:39
+Ana Costa,"Perfeito. Bruno, você assume a integração?",00:00:40,00:00:44
+Bruno Alves,Sim,00:00:45,00:00:46
+Bruno Alves,"Combinado, eu entrego o MVP da integração até sexta às 17h.",00:00:47,00:00:54
+Carla Mendes,"Seu microfone está mudo? Pode falar?",00:00:55,00:00:58
+Ana Costa,"Desculpa, agora sim. Sobre o dashboard, né, a métrica de churn está errada.",00:01:02,00:01:10
+Ana Costa,"Hmm, a gente precisa corrigir o cálculo antes do relatório mensal.",00:01:10,00:01:16
+Carla Mendes,Beleza,00:01:17,00:01:18
+Carla Mendes,"Eu ajusto a query de churn e mando o PR amanhã de manhã.",00:01:19,00:01:26
+Bruno Alves,"Ok, e o e o design do onboarding?",00:01:28,00:01:32
+Ana Costa,"Fica para a próxima sprint. Agora o foco é CRM e churn.",00:01:33,00:01:39
+Carla Mendes,Entendi,00:01:40,00:01:41
+Bruno Alves,"Show. Alguém mais tem bloqueio?",00:01:42,00:01:45
+Carla Mendes,Não,00:01:46,00:01:47
+Ana Costa,"Então fechamos: CRM até sexta 17h com Bruno, churn amanhã com Carla.",00:01:48,00:01:56
+Bruno Alves,Certo,00:01:57,00:01:58
+Ana Costa,"Obrigada pessoal, até mais.",00:02:00,00:02:04
+Carla Mendes,"Tchau, falou.",00:02:05,00:02:07

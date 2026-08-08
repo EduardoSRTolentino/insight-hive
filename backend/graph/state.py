@@ -3,6 +3,8 @@
 import operator
 from typing import Annotated, List, TypedDict
 
+from schemas.intelligence_card import IntelligenceCard
+
 
 class AgentReport(TypedDict):
     agent_key: str
@@ -18,4 +20,4 @@ class State(TypedDict):
     # paralelo, adicionem seus relatórios à mesma lista sem sobrescrever
     # os resultados uns dos outros.
     reports: Annotated[List[AgentReport], operator.add]
-    final_report: str
+    final_report: IntelligenceCard

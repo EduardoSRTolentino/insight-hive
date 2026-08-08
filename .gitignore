@@ -2,7 +2,10 @@ __pycache__/
 *.pyc
 .venv/
 venv/
-.cursor/
+*.egg-info/
+.cursor/*
+!.cursor/plans/
+!.cursor/plans/**
 .env
 
 # Frontend

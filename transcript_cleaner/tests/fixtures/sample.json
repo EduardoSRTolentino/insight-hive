@@ -1,0 +1,10 @@
+[
+  {"speaker": "João Silva", "text": "Bom dia pessoal, tudo bem?", "start": "00:00:01.500", "end": "00:00:03"},
+  {"speaker": "Maria Souza", "text": "Oi, tudo bem!", "start": "00:00:04", "end": "00:00:05"},
+  {"speaker": "João Silva", "text": "Hum, então, tipo, nós nós vamos definir o prazo para sexta.", "start": "00:00:10", "end": "00:00:18"},
+  {"speaker": "João Silva", "text": "A entrega do relatório fica com a Maria, né?", "start": "00:00:18", "end": "00:00:22"},
+  {"speaker": "Maria Souza", "text": "Sim", "start": "00:00:23", "end": "00:00:24"},
+  {"speaker": "Maria Souza", "text": "Combinado, eu entrego até sexta às 18h.", "start": "00:00:25", "end": "00:00:30"},
+  {"speaker": "Pedro Lima", "text": "Seu microfone está mudo? Pode falar?", "start": "00:00:31", "end": "00:00:34"},
+  {"speaker": "João Silva", "text": "Perfeito. Obrigado pessoal, até mais.", "start": "00:01:00", "end": "00:01:05"}
+]

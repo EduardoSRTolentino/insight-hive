@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import client from '../api/client'
+import IntelligenceCard from '../components/IntelligenceCard'
 import { useAuth } from '../context/AuthContext'
 
 export default function UploadPage() {
@@ -90,8 +91,7 @@ export default function UploadPage() {
             <h2>Agentes selecionados</h2>
             <p>{result.selected_agents?.join(', ') || '—'}</p>
 
-            <h2>Relatório final</h2>
-            <pre>{result.final_report}</pre>
+            <IntelligenceCard card={result.final_report} />
           </div>
         )}
       </div>

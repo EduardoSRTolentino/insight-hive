@@ -6,6 +6,7 @@ from typing import Any
 from agents.base import invoke_agent
 from config.agents_config import SPECIALIST_AGENTS
 from graph.state import State
+from schemas.intelligence_card import parse_intelligence_card
 
 MANAGER_TRIAGE_SYSTEM_PROMPT = (
     "Você é o agente gestor (manager) de um sistema multiagente. Sua função é "
@@ -22,9 +23,22 @@ MANAGER_TRIAGE_SYSTEM_PROMPT = (
 MANAGER_SYNTHESIS_SYSTEM_PROMPT = (
     "Você é o agente gestor (manager) de um sistema multiagente. Você recebeu "
     "relatórios de análise profunda de diferentes agentes especialistas. Sua "
-    "tarefa é consolidar essas informações em um único relatório final, claro "
-    "e objetivo, destacando os principais pontos, riscos e recomendações de "
-    "cada área analisada."
+    "tarefa é consolidar essas informações em um Card de Inteligência "
+    "comercial, curto e objetivo.\n\n"
+    "Responda APENAS com um JSON válido (sem markdown, sem texto fora do JSON) "
+    "no formato:\n"
+    "{\n"
+    '  "conta": "nome ou descrição da conta/cliente",\n'
+    '  "ecossistema_mapeado": "produtos/sistemas em uso ou lacunas relevantes",\n'
+    '  "concorrente_citado": "concorrentes mencionados ou Não identificado",\n'
+    '  "oportunidade": "oportunidade comercial principal (ex.: Cross-sell: ...)",\n'
+    '  "persona_detectada": "papel/persona principal detectada",\n'
+    '  "sentimento": "tom geral (ex.: Receptivo / exploratório)",\n'
+    '  "status": "Pendente revisão humana"\n'
+    "}\n"
+    "Use 'Não identificado' quando não houver evidência. "
+    "status deve ser 'Pendente revisão humana' salvo indicação explícita em contrário. "
+    "Cada valor deve ser uma string curta (idealmente uma linha)."
 )
 
 
@@ -58,7 +72,7 @@ def manager_triage(state: State) -> dict[str, Any]:
 
 
 def manager_synthesis(state: State) -> dict[str, Any]:
-    """Consolida os relatórios dos especialistas em um relatório final único."""
+    """Consolida os relatórios dos especialistas em um Card de Inteligência."""
     reports_text = "\n\n".join(
         f"### Relatório: {report['agent_name']}\n{report['content']}"
         for report in state["reports"]
@@ -68,5 +82,5 @@ def manager_synthesis(state: State) -> dict[str, Any]:
         f"Análise preliminar do gestor:\n{state['triage']}\n\n"
         f"Relatórios dos especialistas:\n{reports_text}"
     )
-    final_report = invoke_agent(MANAGER_SYNTHESIS_SYSTEM_PROMPT, user_content)
-    return {"final_report": final_report}
+    raw_response = invoke_agent(MANAGER_SYNTHESIS_SYSTEM_PROMPT, user_content)
+    return {"final_report": parse_intelligence_card(raw_response)}
