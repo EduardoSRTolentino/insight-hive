@@ -8,15 +8,24 @@ from langchain_ollama import ChatOllama
 from ollama import ResponseError
 
 MODEL_NAME = "gpt-oss:20b"
-# Limite conservador: o modelo 20B + fan-out de especialistas estoura RAM/conexão.
+# Limite conservador: o modelo 20B não aguenta muitas gerações seguidas.
 NUM_PREDICT = 512
 MAX_ATTEMPTS = 3
 RETRY_BASE_SECONDS = 2.0
+# Cap de especialistas por análise (triagem + N + síntese).
+MAX_SPECIALISTS = 2
 
 # Ollama local não aguenta bem várias gerações em paralelo no mesmo modelo.
 _llm_lock = Lock()
 
 llm = ChatOllama(model=MODEL_NAME, num_predict=NUM_PREDICT)
+
+
+def truncate_text(text: str, max_chars: int) -> str:
+    text = text or ""
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 20].rstrip() + "\n...[truncado]"
 
 
 def invoke_agent(system_prompt: str, user_content: str) -> str:
@@ -36,7 +45,18 @@ def invoke_agent(system_prompt: str, user_content: str) -> str:
         try:
             with _llm_lock:
                 response = llm.invoke(messages)
-            return response.content
+            content = response.content
+            if isinstance(content, list):
+                parts: list[str] = []
+                for item in content:
+                    if isinstance(item, str):
+                        parts.append(item)
+                    elif isinstance(item, dict) and "text" in item:
+                        parts.append(str(item["text"]))
+                    else:
+                        parts.append(str(item))
+                return "".join(parts)
+            return str(content)
         except (ResponseError, ConnectionError, TimeoutError, OSError) as exc:
             last_error = exc
             if attempt >= MAX_ATTEMPTS:

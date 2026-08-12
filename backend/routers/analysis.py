@@ -1,6 +1,7 @@
 """Rota de análise: upload de .csv/.json que aciona o sistema multiagente."""
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from ollama import ResponseError
 
 from file_input import FileInputError, parse_file_content
 from graph.builder import compiled_graph
@@ -22,7 +23,22 @@ def upload(
     except FileInputError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    resultado = compiled_graph.invoke({"input": entrada, "reports": []})
+    try:
+        resultado = compiled_graph.invoke({"input": entrada, "reports": []})
+    except (ResponseError, ConnectionError, TimeoutError, OSError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "O modelo local (Ollama) falhou durante a análise. "
+                "Tente novamente em instantes; se persistir, reinicie o Ollama "
+                "ou use um arquivo menor."
+            ),
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Falha inesperada na análise: {exc}",
+        ) from exc
 
     return {
         "triage": resultado.get("triage", ""),

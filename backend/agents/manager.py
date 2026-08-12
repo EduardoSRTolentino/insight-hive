@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from agents.base import invoke_agent
+from agents.base import MAX_SPECIALISTS, invoke_agent, truncate_text
 from config.agents_config import SPECIALIST_AGENTS
 from graph.state import State
 from schemas.intelligence_card import parse_intelligence_card
@@ -76,44 +76,39 @@ def _build_triage_prompt() -> str:
 
 def manager_triage(state: State) -> dict[str, Any]:
     """Analisa a entrada do usuário e decide quais especialistas acionar."""
-    raw_response = invoke_agent(_build_triage_prompt(), state["input"])
+    raw_response = invoke_agent(
+        _build_triage_prompt(),
+        truncate_text(state["input"], 4000),
+    )
 
     all_keys = [agent["key"] for agent in SPECIALIST_AGENTS]
+    fallback_keys = all_keys[:MAX_SPECIALISTS]
     triage_text = raw_response
-    selected_agents = all_keys
+    selected_agents = fallback_keys
 
     try:
         parsed = json.loads(raw_response)
         triage_text = parsed.get("triage", raw_response)
-        candidate_keys = parsed.get("selected_agents", all_keys)
+        candidate_keys = parsed.get("selected_agents", fallback_keys)
         valid_keys = [key for key in candidate_keys if key in all_keys]
-        selected_agents = valid_keys or all_keys
+        selected_agents = (valid_keys or fallback_keys)[:MAX_SPECIALISTS]
     except (json.JSONDecodeError, AttributeError, TypeError):
-        # Se o modelo não retornar um JSON válido, mantém a resposta bruta
-        # como triagem e aciona todos os especialistas configurados.
+        # JSON inválido: mantém triagem bruta e aciona só o fallback limitado.
         pass
 
     return {"triage": triage_text, "selected_agents": selected_agents}
 
 
-def _truncate(text: str, max_chars: int) -> str:
-    text = text or ""
-    if len(text) <= max_chars:
-        return text
-    return text[: max_chars - 20].rstrip() + "\n...[truncado]"
-
-
 def manager_synthesis(state: State) -> dict[str, Any]:
     """Consolida os relatórios dos especialistas em um Card de Inteligência."""
-    # Mantém o prompt da síntese sob controle para evitar crash do Ollama.
     reports_text = "\n\n".join(
-        f"### Relatório: {report['agent_name']}\n{_truncate(report['content'], 1200)}"
+        f"### Relatório: {report['agent_name']}\n{truncate_text(report['content'], 1200)}"
         for report in state["reports"]
     )
     user_content = (
-        f"Entrada original do usuário:\n{_truncate(state['input'], 4000)}\n\n"
-        f"Análise preliminar do gestor:\n{_truncate(state['triage'], 800)}\n\n"
-        f"Relatórios dos especialistas:\n{_truncate(reports_text, 6000)}"
+        f"Entrada original do usuário:\n{truncate_text(state['input'], 4000)}\n\n"
+        f"Análise preliminar do gestor:\n{truncate_text(state['triage'], 800)}\n\n"
+        f"Relatórios dos especialistas:\n{truncate_text(reports_text, 6000)}"
     )
     raw_response = invoke_agent(MANAGER_SYNTHESIS_SYSTEM_PROMPT, user_content)
     return {"final_report": parse_intelligence_card(raw_response)}

@@ -4,7 +4,7 @@ from typing import Any, Callable, List
 
 from langgraph.types import Send
 
-from agents.base import invoke_agent
+from agents.base import MAX_SPECIALISTS, invoke_agent, truncate_text
 from config.agents_config import SPECIALIST_AGENTS, SpecialistAgentConfig
 from graph.state import State
 
@@ -18,8 +18,8 @@ def make_specialist_node(agent_config: SpecialistAgentConfig) -> Callable[[State
 
     def specialist_node(state: State) -> dict[str, Any]:
         user_content = (
-            f"Entrada original do usuário:\n{state['input']}\n\n"
-            f"Análise preliminar do gestor:\n{state['triage']}\n\n"
+            f"Entrada original do usuário:\n{truncate_text(state['input'], 3500)}\n\n"
+            f"Análise preliminar do gestor:\n{truncate_text(state['triage'], 600)}\n\n"
             "Faça uma análise profunda desta entrada sob a ótica da sua área "
             "de especialidade."
         )
@@ -35,10 +35,11 @@ def make_specialist_node(agent_config: SpecialistAgentConfig) -> Callable[[State
 
 
 def dispatch_to_specialists(state: State) -> List[Send]:
-    """Aresta condicional que despacha, em paralelo, para cada especialista selecionado pelo manager."""
+    """Despacha para até MAX_SPECIALISTS especialistas selecionados pelo manager."""
     valid_keys = {agent["key"] for agent in SPECIALIST_AGENTS}
     selected = [key for key in state.get("selected_agents", []) if key in valid_keys]
+    selected = selected[:MAX_SPECIALISTS]
     if not selected:
-        selected = list(valid_keys)
+        selected = [agent["key"] for agent in SPECIALIST_AGENTS][:MAX_SPECIALISTS]
 
     return [Send(specialist_node_name(key), state) for key in selected]
