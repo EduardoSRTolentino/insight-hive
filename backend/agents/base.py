@@ -1,24 +1,42 @@
 """Configuração compartilhada do LLM usado por todos os agentes."""
 
+import os
 import time
 from threading import Lock
 
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 from ollama import ResponseError
 
-MODEL_NAME = "gpt-oss:20b"
+load_dotenv()
+
+
+def _env_int(name: str, default: int, *, minimum: int, maximum: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return max(minimum, min(maximum, value))
+
+
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "gpt-oss:20b").strip() or "gpt-oss:20b"
 # Limite conservador: o modelo 20B não aguenta muitas gerações seguidas.
-NUM_PREDICT = 512
+NUM_PREDICT = _env_int("NUM_PREDICT", 512, minimum=128, maximum=8192)
 # Síntese: thinking low + JSON aninhado do card.
-NUM_PREDICT_SYNTHESIS = 2048
+NUM_PREDICT_SYNTHESIS = _env_int(
+    "NUM_PREDICT_SYNTHESIS", 2048, minimum=256, maximum=8192
+)
 MAX_ATTEMPTS = 3
 RETRY_BASE_SECONDS = 2.0
 # Cap de especialistas por análise (triagem + N + síntese).
-MAX_SPECIALISTS = 2
+MAX_SPECIALISTS = _env_int("MAX_SPECIALISTS", 2, minimum=1, maximum=12)
 # gpt-oss: "low" pensa pouco e separa o JSON em content. False piora a
 # síntese; o padrão (medium/high) esgota o num_predict e esvazia o card.
-REASONING_LEVEL = "low"
+REASONING_LEVEL = os.getenv("OLLAMA_REASONING", "low").strip() or "low"
 
 # Ollama local não aguenta bem várias gerações em paralelo no mesmo modelo.
 _llm_lock = Lock()

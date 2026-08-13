@@ -8,8 +8,8 @@ uma aplicação web com login (FastAPI + React).
 
 - Python 3.11+
 - Node.js 18+
-- [Ollama](https://ollama.com/) rodando localmente, com o modelo configurado em
-  [`backend/config/agents_config.py`](backend/config/agents_config.py) já baixado (ex.: `ollama pull gpt-oss:20b`)
+- [Ollama](https://ollama.com/) rodando localmente, com o modelo em `OLLAMA_MODEL`
+  (default `gpt-oss:20b`; ex.: `ollama pull gpt-oss:20b`)
 
 ## Backend (FastAPI)
 
@@ -27,6 +27,25 @@ A API sobe em `http://localhost:8000`. Endpoints principais:
 - Documentação interativa em `http://localhost:8000/docs`.
 
 Usuário/senha padrão (definidos em `.env.example`): `admin` / `admin`.
+
+## Limites do modelo local (`gpt-oss:20b`)
+
+Cada análise faz **1 triagem + N especialistas + 1 síntese**, uma chamada atrás
+da outra (o Ollama local não aguenta fan-out paralelo no mesmo modelo). O card
+tem 6 eixos comerciais, mas o default **N = 2** para o 20B não estourar RAM.
+
+| Variável | Default | Efeito |
+|----------|---------|--------|
+| `MAX_SPECIALISTS` | `2` | Quantos especialistas rodam. `2` = estável no 20B; `6` = cobertura total do card, só com hardware/modelo que aguente. |
+| `NUM_PREDICT` | `512` | Teto de tokens da triagem e dos especialistas. |
+| `NUM_PREDICT_SYNTHESIS` | `2048` | Teto da síntese do card (JSON aninhado). Precisa ser maior que `NUM_PREDICT` ou o card volta vazio. |
+| `OLLAMA_MODEL` | `gpt-oss:20b` | Trocar por um modelo menor permite subir `MAX_SPECIALISTS`. |
+| `OLLAMA_REASONING` | `low` | No gpt-oss, `medium`/`high` gasta o orçamento de tokens pensando e esvazia o card. |
+
+Trade-off: **cobertura vs. estabilidade**. Com N=2 o card só preenche de fato os
+agentes escolhidos na triagem (os outros campos caem em “Não identificado”).
+Subir N sem mudar de modelo costuma gerar 503 ou JSON truncado. Depois de
+alterar o `.env`, reinicie o uvicorn.
 
 ## Frontend (React + Vite)
 
