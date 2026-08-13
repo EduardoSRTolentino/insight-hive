@@ -65,6 +65,26 @@ def _strip_code_fence(raw: str) -> str:
     return text.strip()
 
 
+def loads_json_object(raw: str | None) -> dict[str, Any] | None:
+    """Extrai um objeto JSON de texto que pode vir com fence, preâmbulo ou ruído."""
+    if raw is None:
+        return None
+    text = _strip_code_fence(str(raw))
+    if not text:
+        return None
+    try:
+        data = json.loads(text)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        match = re.search(r"\{[\s\S]*\}", text)
+        if not match:
+            return None
+        try:
+            data = json.loads(match.group(0))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return None
+    return data if isinstance(data, dict) else None
+
+
 def _coerce_str(value: Any, default: str) -> str:
     if value is None:
         return default
@@ -115,13 +135,9 @@ def parse_intelligence_card(raw: str | dict[str, Any] | None) -> IntelligenceCar
     if isinstance(raw, dict):
         data = raw
     else:
-        try:
-            data = json.loads(_strip_code_fence(str(raw)))
-        except (json.JSONDecodeError, TypeError, ValueError):
+        data = loads_json_object(str(raw))
+        if data is None:
             return card
-
-    if not isinstance(data, dict):
-        return card
 
     card["conta"] = _coerce_str(data.get("conta"), DEFAULT_VALUE)
     card["status"] = _coerce_str(data.get("status"), DEFAULT_STATUS)

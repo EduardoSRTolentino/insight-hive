@@ -23,7 +23,11 @@ def make_specialist_node(agent_config: SpecialistAgentConfig) -> Callable[[State
             "Faça uma análise profunda desta entrada sob a ótica da sua área "
             "de especialidade."
         )
-        content = invoke_agent(agent_config["system_prompt"], user_content)
+        content = invoke_agent(
+            agent_config["system_prompt"],
+            user_content,
+            json_mode=True,
+        )
         report = {
             "agent_key": agent_config["key"],
             "agent_name": agent_config["name"],
