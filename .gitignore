@@ -1,13 +1,36 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
 .venv/
 venv/
-*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Env e dados locais
+.env
+.env.*
+!.env.example
+*.db
+backend/data/
+
+# Cursor (versiona os planos)
 .cursor/*
 !.cursor/plans/
 !.cursor/plans/**
-.env
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.log

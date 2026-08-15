@@ -2,15 +2,16 @@
 
 import json
 
-from file_input import FileInputError, load_file_input
+from file_input import FileInputError
 from graph.builder import compiled_graph
+from prepare_analysis_input import prepare_graph_input_from_path
 
 
 def run() -> None:
     while True:
         caminho = input("Digite o caminho do arquivo (.csv ou .json) para análise: ").strip()
         try:
-            entrada = load_file_input(caminho)
+            entrada = prepare_graph_input_from_path(caminho)
         except FileInputError as exc:
             print(f"Erro: {exc}\n")
             continue

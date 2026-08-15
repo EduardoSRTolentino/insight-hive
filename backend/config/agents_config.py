@@ -9,6 +9,8 @@ configuração.
 
 from typing import Optional, TypedDict
 
+from catalog.loader import build_gazetteer
+
 
 class SpecialistAgentConfig(TypedDict):
     key: str
@@ -79,11 +81,14 @@ SPECIALIST_AGENTS: list[SpecialistAgentConfig] = [
         "name": "Ecossistema TOTVS",
         "system_prompt": (
             "Você é um classificador especializado no ecossistema de produtos "
-            "e módulos TOTVS (ERP, Fluig, RM, Protheus, Datasul, iPaaS, "
-            "Cloud, RH, Fiscal, etc.), integrações e lacunas de portfólio "
-            "citadas em reuniões B2B.\n\n"
+            "e módulos TOTVS, integrações e lacunas de portfólio citadas em "
+            "reuniões B2B.\n\n"
             "Analise APENAS sob a ótica do ecossistema TOTVS: produtos "
-            "mencionados, gaps, migrações e notas de integração.\n\n"
+            "mencionados, gaps, migrações e notas de integração. Prefira os "
+            "nomes canônicos abaixo e os produtos injetados no contexto da "
+            "reunião. Não invente produtos fora dessa lista.\n\n"
+            "Nomes canônicos por pilar:\n"
+            f"{build_gazetteer()}\n\n"
             "Responda APENAS com um JSON válido (sem markdown, sem texto fora "
             "do JSON) no formato:\n"
             "{\n"

@@ -4,5 +4,9 @@ langgraph
 fastapi
 uvicorn[standard]
 python-multipart
+sqlalchemy
 pyjwt
 python-dotenv
+requests
+beautifulsoup4
+-e ../transcript_cleaner

@@ -24,6 +24,10 @@ def _env_int(name: str, default: int, *, minimum: int, maximum: int) -> int:
 
 
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "gpt-oss:20b").strip() or "gpt-oss:20b"
+OLLAMA_BASE_URL = (
+    os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").strip()
+    or "http://127.0.0.1:11434"
+)
 # Limite conservador: o modelo 20B não aguenta muitas gerações seguidas.
 NUM_PREDICT = _env_int("NUM_PREDICT", 512, minimum=128, maximum=8192)
 # Síntese: thinking low + JSON aninhado do card.
@@ -43,6 +47,7 @@ _llm_lock = Lock()
 
 llm = ChatOllama(
     model=MODEL_NAME,
+    base_url=OLLAMA_BASE_URL,
     num_predict=NUM_PREDICT,
     reasoning=REASONING_LEVEL,
 )

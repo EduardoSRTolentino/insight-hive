@@ -1,0 +1,43 @@
+services:
+  backend:
+    build:
+      target: prod
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - backend_data:/app/backend/data
+    depends_on:
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      target: prod
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    expose:
+      - "11434"
+    restart: unless-stopped
+    # GPU NVIDIA no servidor — descomente se a placa estiver disponível:
+    # gpus: all
+
+volumes:
+  backend_data:
+  ollama_data:

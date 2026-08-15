@@ -28,9 +28,7 @@ isProject: true
 
 # Pipeline de Limpeza de Transcrições para LLMs
 
-> **Handoff para agentes:** [`transcript_cleaner/README.md`](../../transcript_cleaner/README.md)  
-> **Código:** pacote isolado em `transcript_cleaner/` (raiz do repo).  
-> **Não integrar** em `backend/agents` ou `backend/graph` sem cola explícita no entrypoint.
+> **Integração com o insight-hive:** plano separado em [`cola-transcript-cleaner.md`](cola-transcript-cleaner.md) — só entrypoints, pacote já implementado.
 
 ## Objetivo
 
