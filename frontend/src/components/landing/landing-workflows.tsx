@@ -39,18 +39,17 @@ export function LandingWorkflows() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {STEPS.map((step, index) => {
+          {STEPS.map((step) => {
             const Icon = step.icon
             return (
               <article
                 key={step.title}
                 className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-orange-500/20"
               >
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4">
                   <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-orange-600">
                     <Icon className="size-5" />
                   </span>
-                  <span className="text-sm font-semibold text-gray-400">0{index + 1}</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">{step.body}</p>
