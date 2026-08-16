@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import client from '@/lib/api'
+import client, { setOnUnauthorized } from '@/lib/api'
 
 type AuthContextValue = {
   token: string | null
@@ -25,6 +25,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true)
   }, [])
 
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      localStorage.removeItem('token')
+      setToken(null)
+      window.location.assign('/login')
+    })
+    return () => setOnUnauthorized(null)
+  }, [])
+
   const login = async (username: string, password: string) => {
     const form = new URLSearchParams()
     form.append('username', username)
@@ -34,7 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
 
-    const { access_token } = response.data as { access_token: string }
+    const { access_token } = response.data as { access_token?: unknown }
+    if (typeof access_token !== 'string' || !access_token) {
+      throw new Error('Resposta de login inválida.')
+    }
     localStorage.setItem('token', access_token)
     setToken(access_token)
   }

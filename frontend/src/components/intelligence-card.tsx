@@ -78,7 +78,7 @@ function normalizePoint(raw: unknown): Point {
   return { valor, analise, evidencias }
 }
 
-export default function IntelligenceCard({ card }: { card: unknown }) {
+export function IntelligenceCard({ card }: { card: unknown }) {
   const data = normalizeCard(card)
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
 
@@ -182,3 +182,5 @@ export default function IntelligenceCard({ card }: { card: unknown }) {
     </article>
   )
 }
+
+export default IntelligenceCard

@@ -23,9 +23,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             className="mt-6 rounded-full bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
-            onClick={() => window.location.assign('/login')}
+            onClick={() => window.location.assign('/')}
           >
-            Ir para o login
+            Recarregar
           </button>
         </div>
       )

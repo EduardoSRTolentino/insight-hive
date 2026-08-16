@@ -4,6 +4,12 @@ const client = axios.create({
   baseURL: '/api',
 })
 
+let onUnauthorized: (() => void) | null = null
+
+export function setOnUnauthorized(handler: (() => void) | null) {
+  onUnauthorized = handler
+}
+
 export function apiErrorMessage(err: unknown, fallback: string) {
   if (axios.isAxiosError(err)) {
     const detail = err.response?.data?.detail
@@ -27,5 +33,18 @@ client.interceptors.request.use((config) => {
   }
   return config
 })
+
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const url = error.config?.url ?? ''
+      if (!url.includes('/auth/login')) {
+        onUnauthorized?.()
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default client

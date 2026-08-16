@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CircleIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'

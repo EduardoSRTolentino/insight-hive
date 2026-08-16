@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import client, { apiErrorMessage, isUnauthorized } from '@/lib/api'
+import client, { apiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { type ClientListItem, statusLabel } from '@/lib/types'
 import { formatDateTime } from '@/lib/utils'
@@ -17,8 +17,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<ClientListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const { token, logout } = useAuth()
-  const navigate = useNavigate()
+  const { token } = useAuth()
 
   useEffect(() => {
     if (!token) return
@@ -34,11 +33,6 @@ export default function ClientsPage() {
         }
       } catch (err: unknown) {
         if (cancelled) return
-        if (isUnauthorized(err)) {
-          logout()
-          navigate('/login')
-          return
-        }
         setError(apiErrorMessage(err, 'Não foi possível carregar os clientes.'))
       } finally {
         if (!cancelled) {
@@ -51,7 +45,7 @@ export default function ClientsPage() {
     return () => {
       cancelled = true
     }
-  }, [token, logout, navigate])
+  }, [token])
 
   return (
     <>

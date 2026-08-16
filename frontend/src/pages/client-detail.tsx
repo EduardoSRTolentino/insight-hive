@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import { ClientForm } from '@/components/client-form'
-import IntelligenceCard from '@/components/intelligence-card'
+import { MeetingResult } from '@/components/meeting-result'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import client, { apiErrorMessage, isUnauthorized } from '@/lib/api'
+import client, { apiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import {
   companySizeLabel,
@@ -31,7 +31,7 @@ export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { token, logout } = useAuth()
+  const { token } = useAuth()
   const clientId = Number(id)
   const meetingFromUrl = searchParams.get('meeting')
 
@@ -55,7 +55,12 @@ export default function ClientDetailPage() {
   }, [meetingFromUrl])
 
   useEffect(() => {
-    if (!token || Number.isNaN(clientId)) return
+    if (Number.isNaN(clientId)) {
+      setError('Cliente inválido.')
+      setLoading(false)
+      return
+    }
+    if (!token) return
     let cancelled = false
 
     const load = async () => {
@@ -68,11 +73,6 @@ export default function ClientDetailPage() {
         }
       } catch (err: unknown) {
         if (cancelled) return
-        if (isUnauthorized(err)) {
-          logout()
-          navigate('/login')
-          return
-        }
         setError(apiErrorMessage(err, 'Não foi possível carregar o cliente.'))
       } finally {
         if (!cancelled) {
@@ -85,10 +85,10 @@ export default function ClientDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [token, clientId, logout, navigate])
+  }, [token, clientId])
 
   useEffect(() => {
-    if (!token || !selectedId) {
+    if (!token || !selectedId || Number.isNaN(clientId)) {
       setMeeting(null)
       return
     }
@@ -108,11 +108,6 @@ export default function ClientDetailPage() {
         }
       } catch (err: unknown) {
         if (cancelled) return
-        if (isUnauthorized(err)) {
-          logout()
-          navigate('/login')
-          return
-        }
         setError(apiErrorMessage(err, 'Não foi possível carregar a reunião.'))
         setMeeting(null)
       } finally {
@@ -126,7 +121,7 @@ export default function ClientDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [token, selectedId, clientId, logout, navigate])
+  }, [token, selectedId, clientId])
 
   const selectMeeting = (meetingId: number) => {
     setSelectedId(meetingId)
@@ -148,11 +143,6 @@ export default function ClientDetailPage() {
         navigate(`/clients/${clientId}`, { replace: true })
       }
     } catch (err: unknown) {
-      if (isUnauthorized(err)) {
-        logout()
-        navigate('/login')
-        return
-      }
       setError(apiErrorMessage(err, 'Não foi possível remover a reunião.'))
     }
   }
@@ -163,11 +153,6 @@ export default function ClientDetailPage() {
       setDetail(response.data)
       setEditing(false)
     } catch (err: unknown) {
-      if (isUnauthorized(err)) {
-        logout()
-        navigate('/login')
-        return
-      }
       throw new Error(apiErrorMessage(err, 'Não foi possível atualizar o cliente.'))
     }
   }
@@ -363,34 +348,12 @@ export default function ClientDetailPage() {
           )}
 
           {meeting && !meetingLoading && (
-            <div className="mt-8 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Triagem</CardTitle>
-                  <CardDescription>
-                    {meeting.source_filename} · {formatDateTime(meeting.created_at)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-gray-700">
-                    {meeting.triage}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Agentes selecionados</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-700">
-                    {meeting.selected_agents?.join(', ') || '—'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <IntelligenceCard card={meeting.final_report} />
-            </div>
+            <MeetingResult
+              triage={meeting.triage}
+              selected_agents={meeting.selected_agents}
+              final_report={meeting.final_report}
+              description={`${meeting.source_filename} · ${formatDateTime(meeting.created_at)}`}
+            />
           )}
         </>
       )}

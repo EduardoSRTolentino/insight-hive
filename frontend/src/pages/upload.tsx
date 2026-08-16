@@ -1,7 +1,7 @@
-import { FormEvent, useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { type FormEvent, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import IntelligenceCard from '@/components/intelligence-card'
+import { MeetingResult } from '@/components/meeting-result'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import client, { apiErrorMessage, isUnauthorized } from '@/lib/api'
+import client, { apiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import type { ClientListItem, MeetingDetail } from '@/lib/types'
 
@@ -25,8 +25,7 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<MeetingDetail | null>(null)
-  const { token, logout } = useAuth()
-  const navigate = useNavigate()
+  const { token } = useAuth()
   const [searchParams] = useSearchParams()
   const preselected = searchParams.get('client')
 
@@ -47,11 +46,6 @@ export default function UploadPage() {
         }
       } catch (err: unknown) {
         if (cancelled) return
-        if (isUnauthorized(err)) {
-          logout()
-          navigate('/login')
-          return
-        }
         setError(apiErrorMessage(err, 'Não foi possível carregar os clientes.'))
       } finally {
         if (!cancelled) {
@@ -64,7 +58,7 @@ export default function UploadPage() {
     return () => {
       cancelled = true
     }
-  }, [token, preselected, logout, navigate])
+  }, [token, preselected])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -91,11 +85,6 @@ export default function UploadPage() {
       })
       setResult(response.data)
     } catch (err: unknown) {
-      if (isUnauthorized(err)) {
-        logout()
-        navigate('/login')
-        return
-      }
       setError(apiErrorMessage(err, 'Erro ao processar o arquivo.'))
     } finally {
       setLoading(false)
@@ -200,43 +189,24 @@ export default function UploadPage() {
       </Card>
 
       {result && (
-        <div className="mt-8 space-y-6">
-          <p className="text-sm text-gray-600">
-            Análise salva em{' '}
-            <span className="font-medium text-gray-900">{result.client_name}</span>
-            .{' '}
-            <Link
-              to={`/clients/${result.client_id}?meeting=${result.id}`}
-              className="font-medium text-orange-600 hover:text-orange-700"
-            >
-              Ver no histórico do cliente
-            </Link>
-          </p>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Triagem</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed text-gray-700">
-                {result.triage}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Agentes selecionados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-700">
-                {result.selected_agents?.join(', ') || '—'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <IntelligenceCard card={result.final_report} />
-        </div>
+        <MeetingResult
+          triage={result.triage}
+          selected_agents={result.selected_agents}
+          final_report={result.final_report}
+          header={
+            <p className="text-sm text-gray-600">
+              Análise salva em{' '}
+              <span className="font-medium text-gray-900">{result.client_name}</span>
+              .{' '}
+              <Link
+                to={`/clients/${result.client_id}?meeting=${result.id}`}
+                className="font-medium text-orange-600 hover:text-orange-700"
+              >
+                Ver no histórico do cliente
+              </Link>
+            </p>
+          }
+        />
       )}
     </>
   )
