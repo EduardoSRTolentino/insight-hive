@@ -1,56 +1,44 @@
 """Configuração compartilhada do LLM usado por todos os agentes."""
 
-import os
 import time
+from functools import lru_cache
 from threading import Lock
 
-from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 from ollama import ResponseError
 
-load_dotenv()
+from settings import get_settings
 
+_settings = get_settings()
 
-def _env_int(name: str, default: int, *, minimum: int, maximum: int) -> int:
-    raw = os.getenv(name)
-    if raw is None or not str(raw).strip():
-        return default
-    try:
-        value = int(raw)
-    except ValueError:
-        return default
-    return max(minimum, min(maximum, value))
-
-
-MODEL_NAME = os.getenv("OLLAMA_MODEL", "gpt-oss:20b").strip() or "gpt-oss:20b"
-OLLAMA_BASE_URL = (
-    os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").strip()
-    or "http://127.0.0.1:11434"
-)
+MODEL_NAME = _settings.ollama_model
+OLLAMA_BASE_URL = _settings.ollama_base_url
 # Limite conservador: o modelo 20B não aguenta muitas gerações seguidas.
-NUM_PREDICT = _env_int("NUM_PREDICT", 512, minimum=128, maximum=8192)
+NUM_PREDICT = _settings.num_predict
 # Síntese: thinking low + JSON aninhado do card.
-NUM_PREDICT_SYNTHESIS = _env_int(
-    "NUM_PREDICT_SYNTHESIS", 2048, minimum=256, maximum=8192
-)
+NUM_PREDICT_SYNTHESIS = _settings.num_predict_synthesis
 MAX_ATTEMPTS = 3
 RETRY_BASE_SECONDS = 2.0
 # Cap de especialistas por análise (triagem + N + síntese).
-MAX_SPECIALISTS = _env_int("MAX_SPECIALISTS", 2, minimum=1, maximum=12)
+MAX_SPECIALISTS = _settings.max_specialists
 # gpt-oss: "low" pensa pouco e separa o JSON em content. False piora a
 # síntese; o padrão (medium/high) esgota o num_predict e esvazia o card.
-REASONING_LEVEL = os.getenv("OLLAMA_REASONING", "low").strip() or "low"
+REASONING_LEVEL = _settings.ollama_reasoning
 
 # Ollama local não aguenta bem várias gerações em paralelo no mesmo modelo.
 _llm_lock = Lock()
 
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    num_predict=NUM_PREDICT,
-    reasoning=REASONING_LEVEL,
-)
+
+@lru_cache(maxsize=1)
+def get_llm() -> ChatOllama:
+    settings = get_settings()
+    return ChatOllama(
+        model=settings.ollama_model,
+        base_url=settings.ollama_base_url,
+        num_predict=settings.num_predict,
+        reasoning=settings.ollama_reasoning,
+    )
 
 _THINKING_BLOCK_TYPES = {"thinking", "reasoning", "reason"}
 
@@ -119,7 +107,7 @@ def invoke_agent(
         updates["num_predict"] = num_predict
     if json_mode:
         updates["format"] = "json"
-    model = llm.model_copy(update=updates)
+    model = get_llm().model_copy(update=updates)
 
     last_error: Exception | None = None
     for attempt in range(1, MAX_ATTEMPTS + 1):

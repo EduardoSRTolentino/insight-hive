@@ -6,6 +6,7 @@ services:
       - ./backend:/app/backend
       - ./transcript_cleaner:/app/transcript_cleaner
     environment:
+      APP_ENV: development
       OLLAMA_BASE_URL: http://host.docker.internal:11434
     extra_hosts:
       - "host.docker.internal:host-gateway"

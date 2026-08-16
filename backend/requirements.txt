@@ -1,12 +1,13 @@
-langchain-core
-langchain-ollama
-langgraph
-fastapi
-uvicorn[standard]
-python-multipart
-sqlalchemy
-pyjwt
-python-dotenv
-requests
-beautifulsoup4
+langchain-core==1.5.3
+langchain-ollama==1.1.0
+langgraph==1.2.10
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17
+sqlalchemy==2.0.36
+alembic==1.14.1
+pydantic-settings==2.10.1
+pyjwt==2.13.0
+python-dotenv==1.2.2
+ollama==0.6.2
 -e ../transcript_cleaner

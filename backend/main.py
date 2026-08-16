@@ -3,7 +3,7 @@
 import json
 
 from file_input import FileInputError
-from graph.builder import compiled_graph
+from graph.builder import get_compiled_graph
 from prepare_analysis_input import prepare_graph_input_from_path
 
 
@@ -16,7 +16,7 @@ def run() -> None:
             print(f"Erro: {exc}\n")
             continue
 
-        resultado = compiled_graph.invoke({"input": entrada, "reports": []})
+        resultado = get_compiled_graph().invoke({"input": entrada, "reports": []})
 
         print("\n===== CARD DE INTELIGÊNCIA =====\n")
         print(json.dumps(resultado["final_report"], ensure_ascii=False, indent=2))

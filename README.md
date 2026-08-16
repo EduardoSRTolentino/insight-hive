@@ -62,6 +62,13 @@ A API sobe em `http://localhost:8000`. Endpoints principais:
 - Documentação interativa em `http://localhost:8000/docs`.
 
 Análises ficam em SQLite (`backend/data/insight_hive.db`, gitignored; `DATABASE_URL` no `.env`).
+O schema é versionado com Alembic: o lifespan da API aplica `alembic upgrade head`
+(ou `stamp head` se o banco local já existia sem tabela de versão). Sem o servidor:
+
+```bash
+cd backend
+alembic upgrade head
+```
 
 Usuário/senha padrão (definidos em `.env.example`): `admin` / `admin`.
 
@@ -75,11 +82,12 @@ Para atualizar o CSV/JSON versionados em `backend/catalog/data/`:
 
 ```bash
 cd backend
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-scrape.txt
 python -m catalog.scrape
 ```
 
-O scraper usa `requests` + `beautifulsoup4` (sem Playwright). Fonte primária:
+O scraper usa `requests` + `beautifulsoup4` (sem Playwright); esses pacotes **não**
+entram na imagem da API. Fonte primária:
 `GET /wp-json/wp/v2/produto`. Páginas HTML só entram quando a API não traz
 descrição (`h1` + primeiro `p`). Reinicie o backend depois de re-scrapar para
 o gazetteer e o matcher lerem o JSON novo.
@@ -99,6 +107,7 @@ tem 6 eixos comerciais, mas o default **N = 2** para o 20B não estourar RAM.
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | URL do Ollama. No Docker o Compose define o valor certo. |
 | `OLLAMA_REASONING` | `low` | No gpt-oss, `medium`/`high` gasta o orçamento de tokens pensando e esvazia o card. |
 | `TRANSCRIPT_CLEAN` | `1` | Limpa transcrições no entrypoint (sem LLM extra). `0` envia o texto bruto, como antes. |
+| `MAX_UPLOAD_BYTES` | `5242880` | Teto do arquivo em `POST /api/analysis/upload` (5 MiB). Acima disso a API responde 413. |
 
 Trade-off: **cobertura vs. estabilidade**. Com N=2 o card só preenche de fato os
 agentes escolhidos na triagem (os outros campos caem em “Não identificado”).
@@ -116,6 +125,34 @@ npm run dev
 A aplicação sobe em `http://localhost:5173`. Faça login, escolha (ou crie) um
 cliente, envie um arquivo `.csv` ou `.json` e acompanhe o histórico em
 **Clientes**.
+
+## Testes
+
+Backend (pytest, sem Ollama). A partir de `backend/`:
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
+
+O `transcript_cleaner` tem suíte própria:
+
+```bash
+cd transcript_cleaner
+pip install -e ".[dev]"
+pytest
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm test
+npm run lint
+npm run typecheck
+```
 
 ## Uso via terminal (sem web)
 

@@ -1,5 +1,7 @@
 """Montagem do grafo multiagente: manager -> especialistas (paralelo) -> manager."""
 
+from functools import lru_cache
+
 from langgraph.graph import END, START, StateGraph
 
 from agents.manager import manager_synthesis, manager_triage
@@ -28,4 +30,6 @@ def build_graph():
     return graph.compile()
 
 
-compiled_graph = build_graph()
+@lru_cache(maxsize=1)
+def get_compiled_graph():
+    return build_graph()

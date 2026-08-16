@@ -3,7 +3,6 @@
 Rodar com: uvicorn api:app --reload --port 8000
 """
 
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,18 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db import init_db
 from routers import analysis, auth, clients
-
-
-def _cors_origins() -> list[str]:
-    raw = os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
-    )
-    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+from security import assert_secure_secrets
+from settings import get_settings
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    assert_secure_secrets()
     init_db()
     yield
 
@@ -31,7 +25,7 @@ app = FastAPI(title="Sistema Multiagente API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins(),
+    allow_origins=get_settings().cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -10,18 +10,14 @@ from __future__ import annotations
 import logging
 import os
 
-from dotenv import load_dotenv
-
 from file_input import FileInputError, load_file_input, parse_file_content
-
-load_dotenv()
+from settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 
 def _transcript_clean_enabled() -> bool:
-    raw = os.getenv("TRANSCRIPT_CLEAN", "1").strip().lower()
-    return raw not in {"0", "false", "off", "no"}
+    return get_settings().transcript_clean_enabled
 
 
 def _wrap_cleaned(filename: str, cleaned_text: str) -> str:
