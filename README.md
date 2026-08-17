@@ -55,22 +55,27 @@ uvicorn api:app --reload --port 8000
 
 A API sobe em `http://localhost:8000`. Endpoints principais:
 
-- `POST /api/auth/login` — recebe `username`/`password` (form) e retorna um token JWT.
-- `GET/POST /api/clients` — lista e cria clientes. `GET /api/clients/{id}` devolve o histórico de reuniões.
+- `POST /api/auth/register` — cria uma conta (JSON) e devolve um token JWT.
+- `POST /api/auth/login` — recebe `username` (e-mail) / `password` (form) e retorna um token JWT.
+- `GET/PATCH /api/auth/me` — lê ou atualiza o perfil de quem está autenticado.
+- `GET/POST /api/clients` — lista e cria clientes **do usuário autenticado**. `GET /api/clients/{id}` devolve o histórico de reuniões.
 - `GET/DELETE /api/meetings/{id}` — consulta ou remove uma análise salva.
-- `POST /api/analysis/upload` — recebe `client_id` (form) e um arquivo `.csv`/`.json` (multipart, campo `file`) autenticado via `Authorization: Bearer <token>`, roda o sistema multiagente, **salva a análise no cliente** e retorna o relatório final. Transcrições são limpas no upload, sem passar pelo grafo.
+- `POST /api/analysis/upload` — recebe `client_id` (form) e um arquivo `.csv`/`.json` (multipart, campo `file`) autenticado via `Authorization: Bearer <token>`, enfileira a análise e responde **202** com o job. Transcrições são limpas no upload, sem passar pelo grafo.
+- `GET /api/analysis/jobs/{id}` — acompanha o job (`queued` / `running` / `done` / `failed`). Em `done`, o payload inclui a reunião salva no cliente.
 - Documentação interativa em `http://localhost:8000/docs`.
 
 Análises ficam em SQLite (`backend/data/insight_hive.db`, gitignored; `DATABASE_URL` no `.env`).
 O schema é versionado com Alembic: o lifespan da API aplica `alembic upgrade head`
-(ou `stamp head` se o banco local já existia sem tabela de versão). Sem o servidor:
+(ou `stamp 001_initial` se o banco local já existia sem tabela de versão, e em seguida
+sobe as revisões seguintes). Sem o servidor:
 
 ```bash
 cd backend
 alembic upgrade head
 ```
 
-Usuário/senha padrão (definidos em `.env.example`): `admin` / `admin`.
+Admin seed (definido em `.env.example`): e-mail `admin@insight-hive.local`, senha `admin`.
+Novas contas entram por `/signup` ou `POST /api/auth/register`.
 
 ## Catálogo TOTVS (agente Ecossistema)
 
@@ -96,7 +101,7 @@ o gazetteer e o matcher lerem o JSON novo.
 
 Cada análise faz **1 triagem + N especialistas + 1 síntese**, uma chamada atrás
 da outra (o Ollama local não aguenta fan-out paralelo no mesmo modelo). O card
-tem 6 eixos comerciais, mas o default **N = 2** para o 20B não estourar RAM.
+tem 7 eixos comerciais (incluindo retenção/churn e budget), mas o default **N = 2** para o 20B não estourar RAM.
 
 | Variável | Default | Efeito |
 |----------|---------|--------|
@@ -105,7 +110,7 @@ tem 6 eixos comerciais, mas o default **N = 2** para o 20B não estourar RAM.
 | `NUM_PREDICT_SYNTHESIS` | `2048` | Teto da síntese do card (JSON aninhado). Precisa ser maior que `NUM_PREDICT` ou o card volta vazio. |
 | `OLLAMA_MODEL` | `gpt-oss:20b` | Trocar por um modelo menor permite subir `MAX_SPECIALISTS`. |
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | URL do Ollama. No Docker o Compose define o valor certo. |
-| `OLLAMA_REASONING` | `low` | No gpt-oss, `medium`/`high` gasta o orçamento de tokens pensando e esvazia o card. |
+| `OLLAMA_REASONING` | `low` | No gpt-oss, `medium`/`high` gasta o orçamento de tokens pensando e esvazia o card. Modelos sem thinking (ex. `qwen2.5`) ignoram o valor. |
 | `TRANSCRIPT_CLEAN` | `1` | Limpa transcrições no entrypoint (sem LLM extra). `0` envia o texto bruto, como antes. |
 | `MAX_UPLOAD_BYTES` | `5242880` | Teto do arquivo em `POST /api/analysis/upload` (5 MiB). Acima disso a API responde 413. |
 
@@ -127,6 +132,8 @@ cliente, envie um arquivo `.csv` ou `.json` e acompanhe o histórico em
 **Clientes**.
 
 ## Testes
+
+No push, o GitHub Actions (`.github/workflows/ci.yml`) roda as três suítes abaixo.
 
 Backend (pytest, sem Ollama). A partir de `backend/`:
 
