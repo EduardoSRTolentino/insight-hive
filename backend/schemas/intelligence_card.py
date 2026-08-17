@@ -14,6 +14,8 @@ POINT_FIELDS = (
     "ecossistema_mapeado",
     "concorrente_citado",
     "oportunidade",
+    "retencao_churn",
+    "budget",
     "persona_detectada",
     "sentimento",
 )
@@ -32,6 +34,8 @@ class IntelligenceCard(TypedDict):
     ecossistema_mapeado: CardPoint
     concorrente_citado: CardPoint
     oportunidade: CardPoint
+    retencao_churn: CardPoint
+    budget: CardPoint
     persona_detectada: CardPoint
     sentimento: CardPoint
     status: str
@@ -51,6 +55,8 @@ def empty_intelligence_card() -> IntelligenceCard:
         "ecossistema_mapeado": empty_card_point(),
         "concorrente_citado": empty_card_point(),
         "oportunidade": empty_card_point(),
+        "retencao_churn": empty_card_point(),
+        "budget": empty_card_point(),
         "persona_detectada": empty_card_point(),
         "sentimento": empty_card_point(),
         "status": DEFAULT_STATUS,

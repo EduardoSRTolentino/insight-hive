@@ -56,6 +56,16 @@ MANAGER_SYNTHESIS_SYSTEM_PROMPT = (
     '    "analise": "1 a 2 frases",\n'
     '    "evidencias": ["..."]\n'
     "  },\n"
+    '  "retencao_churn": {\n'
+    '    "valor": "risco de churn ou sinal de retenção",\n'
+    '    "analise": "1 a 2 frases",\n'
+    '    "evidencias": ["..."]\n'
+    "  },\n"
+    '  "budget": {\n'
+    '    "valor": "orçamento, teto ou sinal de investimento",\n'
+    '    "analise": "1 a 2 frases",\n'
+    '    "evidencias": ["..."]\n'
+    "  },\n"
     '  "persona_detectada": {\n'
     '    "valor": "papel/persona principal",\n'
     '    "analise": "1 a 2 frases",\n'
@@ -72,6 +82,9 @@ MANAGER_SYNTHESIS_SYSTEM_PROMPT = (
     "- Preencha valor com o que os especialistas e a entrada original "
     "mostrarem (label, summary, produtos, riscos). Só use 'Não identificado' "
     "quando realmente não houver evidência.\n"
+    "- retencao_churn consolida o especialista retencao_churn; budget, o "
+    "especialista budget. concorrente_citado sai da entrada e dos relatórios, "
+    "mesmo sem especialista dedicado.\n"
     "- analise e evidencias devem consolidar a entrada original e os "
     "relatórios dos especialistas; não invente fatos.\n"
     "- evidencias: no máximo 2 itens; pode ser [] se não houver suporte.\n"
