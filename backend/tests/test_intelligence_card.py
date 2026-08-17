@@ -13,6 +13,8 @@ def test_empty_input_returns_defaults() -> None:
     assert card["conta"] == DEFAULT_VALUE
     assert card["status"] == DEFAULT_STATUS
     assert card["oportunidade"]["analise"] == DEFAULT_ANALISE
+    assert card["retencao_churn"]["valor"] == DEFAULT_VALUE
+    assert card["budget"]["valor"] == DEFAULT_VALUE
 
 
 def test_strips_markdown_fence() -> None:
