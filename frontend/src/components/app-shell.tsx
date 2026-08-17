@@ -5,6 +5,7 @@ import {
   FileUp,
   LogOut,
   Menu,
+  UserRound,
   UserPlus,
   Users,
   X,
@@ -17,11 +18,13 @@ const NAV = [
   { href: '/clients', label: 'Clientes', icon: Users, match: 'clients' },
   { href: '/clients/new', label: 'Novo cliente', icon: UserPlus, match: 'new' },
   { href: '/upload', label: 'Nova análise', icon: FileUp, match: 'upload' },
+  { href: '/account', label: 'Minha conta', icon: UserRound, match: 'account' },
 ] as const
 
 function isActive(pathname: string, item: (typeof NAV)[number]) {
   if (item.match === 'new') return pathname === '/clients/new'
   if (item.match === 'upload') return pathname === '/upload'
+  if (item.match === 'account') return pathname === '/account'
   return pathname === '/clients' || (pathname.startsWith('/clients/') && pathname !== '/clients/new')
 }
 
@@ -55,7 +58,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function AppShell() {
-  const { token, ready, logout } = useAuth()
+  const { token, user, ready, logout } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -101,6 +104,11 @@ export function AppShell() {
         <div className="flex flex-1 flex-col px-3 pb-4">
           <NavLinks />
           <div className="mt-auto pt-4">
+            {user && (
+              <p className="mb-3 truncate px-3 text-xs text-gray-500" title={user.email}>
+                {user.full_name}
+              </p>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -146,6 +154,11 @@ export function AppShell() {
             <div className="flex flex-1 flex-col px-3 pb-4">
               <NavLinks onNavigate={() => setMenuOpen(false)} />
               <div className="mt-auto pt-4">
+                {user && (
+                  <p className="mb-3 truncate px-3 text-xs text-gray-500" title={user.email}>
+                    {user.full_name}
+                  </p>
+                )}
                 <Button
                   type="button"
                   variant="outline"

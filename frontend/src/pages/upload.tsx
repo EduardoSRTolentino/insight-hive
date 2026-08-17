@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import client, { apiErrorMessage } from '@/lib/api'
+import { runAnalysisUpload } from '@/lib/analysis-job'
 import { useAuth } from '@/lib/auth-context'
 import type { ClientListItem, MeetingDetail } from '@/lib/types'
 
@@ -80,10 +81,8 @@ export default function UploadPage() {
     formData.append('client_id', clientId)
 
     try {
-      const response = await client.post<MeetingDetail>('/analysis/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      setResult(response.data)
+      const meeting = await runAnalysisUpload(formData)
+      setResult(meeting)
     } catch (err: unknown) {
       setError(apiErrorMessage(err, 'Erro ao processar o arquivo.'))
     } finally {

@@ -50,6 +50,17 @@ export type MeetingDetail = {
   final_report: unknown
 }
 
+export type AnalysisJobStatus = 'queued' | 'running' | 'done' | 'failed'
+
+export type AnalysisJob = {
+  id: number
+  status: AnalysisJobStatus
+  source_filename: string
+  created_at: string
+  error_detail: string | null
+  meeting: MeetingDetail | null
+}
+
 export type ClientPayload = {
   name: string
   segment?: string | null
@@ -85,3 +96,34 @@ export function statusLabel(status: string | null | undefined) {
 export function companySizeLabel(size: string | null | undefined) {
   return COMPANY_SIZES.find((item) => item.value === size)?.label ?? null
 }
+
+export type UserProfile = {
+  id: number
+  email: string
+  full_name: string
+  company: string | null
+  job_title: string | null
+  department: string | null
+  phone: string | null
+  city: string | null
+  state: string | null
+  linkedin_url: string | null
+  bio: string | null
+  created_at: string
+}
+
+export type UserRegisterPayload = {
+  full_name: string
+  email: string
+  password: string
+  company?: string | null
+  job_title?: string | null
+  department?: string | null
+  phone?: string | null
+  city?: string | null
+  state?: string | null
+  linkedin_url?: string | null
+  bio?: string | null
+}
+
+export type UserUpdatePayload = Omit<UserRegisterPayload, 'password'>

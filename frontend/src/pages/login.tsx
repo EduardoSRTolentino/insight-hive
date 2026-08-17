@@ -8,7 +8,7 @@ import { apiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,7 +26,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(username, password)
+      await login(email, password)
       navigate('/clients')
     } catch (err: unknown) {
       setError(apiErrorMessage(err, 'Não foi possível entrar. Tente novamente.'))
@@ -59,19 +59,19 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <Label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Usuário
+            <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              E-mail
             </Label>
             <div className="mt-1">
               <Input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
                 required
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder="admin"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="voce@empresa.com"
                 className="relative block w-full rounded-full border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus-visible:border-orange-500 focus-visible:ring-orange-500/50"
               />
             </div>
@@ -113,6 +113,12 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Não tem conta?{' '}
+          <Link to="/signup" className="font-medium text-orange-600 hover:text-orange-700">
+            Criar conta
+          </Link>
+        </p>
       </div>
     </div>
   )
