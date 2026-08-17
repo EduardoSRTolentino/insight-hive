@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from db import get_db
-from models import Client, Meeting
+from models import Client, Meeting, User
+from ownership import get_owned_client, get_owned_meeting
 from schemas.clients import (
     ClientCreate,
     ClientDetail,
@@ -122,10 +123,9 @@ def meeting_detail(meeting: Meeting) -> MeetingDetail:
 
 @router.get("/clients", response_model=list[ClientListItem])
 def list_clients(
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[ClientListItem]:
-    del current_user
     rows = db.execute(
         select(
             Client,
@@ -133,6 +133,7 @@ def list_clients(
             func.max(Meeting.created_at).label("last_meeting_at"),
         )
         .outerjoin(Meeting)
+        .where(Client.user_id == current_user.id)
         .group_by(Client.id)
         .order_by(func.max(Meeting.created_at).desc(), Client.name)
     ).all()
@@ -146,10 +147,9 @@ def list_clients(
 @router.post("/clients", response_model=ClientListItem, status_code=status.HTTP_201_CREATED)
 def create_client(
     body: ClientCreate,
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ClientListItem:
-    del current_user
     name = normalize_client_name(body.name)
     if not name:
         raise HTTPException(
@@ -159,7 +159,12 @@ def create_client(
 
     payload = body.model_dump()
     payload.pop("name")
-    client = Client(name=name, name_key=name.casefold(), **payload)
+    client = Client(
+        name=name,
+        name_key=name.casefold(),
+        user_id=current_user.id,
+        **payload,
+    )
     db.add(client)
     try:
         db.commit()
@@ -177,13 +182,10 @@ def create_client(
 def update_client(
     client_id: int,
     body: ClientUpdate,
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ClientDetail:
-    del current_user
-    client = db.get(Client, client_id)
-    if client is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado.")
+    client = get_owned_client(db, current_user, client_id)
 
     apply_client_fields(client, body.model_dump(exclude_unset=True))
     try:
@@ -213,13 +215,10 @@ def update_client(
 @router.get("/clients/{client_id}", response_model=ClientDetail)
 def get_client(
     client_id: int,
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ClientDetail:
-    del current_user
-    client = db.get(Client, client_id)
-    if client is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado.")
+    client = get_owned_client(db, current_user, client_id)
 
     meetings = db.scalars(
         select(Meeting)
@@ -239,26 +238,20 @@ def get_client(
 @router.get("/meetings/{meeting_id}", response_model=MeetingDetail)
 def get_meeting(
     meeting_id: int,
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MeetingDetail:
-    del current_user
-    meeting = db.get(Meeting, meeting_id)
-    if meeting is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reunião não encontrada.")
+    meeting = get_owned_meeting(db, current_user, meeting_id)
     return meeting_detail(meeting)
 
 
 @router.delete("/meetings/{meeting_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_meeting(
     meeting_id: int,
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Response:
-    del current_user
-    meeting = db.get(Meeting, meeting_id)
-    if meeting is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reunião não encontrada.")
+    meeting = get_owned_meeting(db, current_user, meeting_id)
     db.delete(meeting)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
