@@ -10,6 +10,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
@@ -44,8 +45,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             className={cn(
               'flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium',
               active
-                ? 'bg-orange-50 text-orange-600'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
           >
             <Icon className="size-4" />
@@ -86,38 +87,41 @@ export function AppShell() {
 
   if (!ready || !token) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 text-sm text-gray-600">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background text-sm text-muted-foreground">
         Carregando...
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-[100dvh] bg-white">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col self-start border-r border-gray-200 lg:flex">
+    <div className="flex min-h-[100dvh] bg-background">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col self-start border-r border-border bg-card lg:flex">
         <div className="flex h-16 items-center px-4">
           <Link to="/clients" className="flex items-center">
-            <CircleIcon className="h-6 w-6 text-orange-500" />
-            <span className="ml-2 text-lg font-semibold text-gray-900">Insight Hive</span>
+            <CircleIcon className="h-6 w-6 text-primary" />
+            <span className="ml-2 text-lg font-semibold text-foreground">Insight Hive</span>
           </Link>
         </div>
         <div className="flex flex-1 flex-col px-3 pb-4">
           <NavLinks />
           <div className="mt-auto pt-4">
             {user && (
-              <p className="mb-3 truncate px-3 text-xs text-gray-500" title={user.email}>
+              <p className="mb-3 truncate px-3 text-xs text-muted-foreground" title={user.email}>
                 {user.full_name}
               </p>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full rounded-full"
-              onClick={handleLogout}
-            >
-              <LogOut className="size-4" />
-              Sair
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="min-w-0 flex-1 rounded-full"
+                onClick={handleLogout}
+              >
+                <LogOut className="size-4" />
+                Sair
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </aside>
@@ -126,20 +130,20 @@ export function AppShell() {
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/30"
+            className="absolute inset-0 bg-foreground/30"
             aria-label="Fechar menu"
             onClick={() => setMenuOpen(false)}
           />
           <aside
-            className="relative z-50 flex h-full w-64 flex-col bg-white shadow-lg"
+            className="relative z-50 flex h-full w-64 flex-col bg-card shadow-lg"
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
           >
             <div className="flex h-16 items-center justify-between px-4">
               <Link to="/clients" className="flex items-center" onClick={() => setMenuOpen(false)}>
-                <CircleIcon className="h-6 w-6 text-orange-500" />
-                <span className="ml-2 text-lg font-semibold text-gray-900">Insight Hive</span>
+                <CircleIcon className="h-6 w-6 text-primary" />
+                <span className="ml-2 text-lg font-semibold text-foreground">Insight Hive</span>
               </Link>
               <Button
                 type="button"
@@ -155,19 +159,22 @@ export function AppShell() {
               <NavLinks onNavigate={() => setMenuOpen(false)} />
               <div className="mt-auto pt-4">
                 {user && (
-                  <p className="mb-3 truncate px-3 text-xs text-gray-500" title={user.email}>
+                  <p className="mb-3 truncate px-3 text-xs text-muted-foreground" title={user.email}>
                     {user.full_name}
                   </p>
                 )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full rounded-full"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="size-4" />
-                  Sair
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-0 flex-1 rounded-full"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    Sair
+                  </Button>
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </aside>
@@ -175,7 +182,7 @@ export function AppShell() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center gap-3 border-b border-gray-200 px-4 lg:hidden">
+        <header className="flex h-16 items-center gap-3 border-b border-border px-4 lg:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -186,9 +193,12 @@ export function AppShell() {
             <Menu />
           </Button>
           <Link to="/clients" className="flex items-center">
-            <CircleIcon className="h-5 w-5 text-orange-500" />
-            <span className="ml-2 font-semibold text-gray-900">Insight Hive</span>
+            <CircleIcon className="h-5 w-5 text-primary" />
+            <span className="ml-2 font-semibold text-foreground">Insight Hive</span>
           </Link>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 lg:px-8">
           <Outlet />

@@ -46,16 +46,16 @@ export function LandingFeatures() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <span className="h-px w-8 bg-linear-to-r from-transparent to-orange-300" />
-            <p className="text-sm font-medium tracking-wide text-orange-600 uppercase">
+            <span className="h-px w-8 bg-linear-to-r from-transparent to-primary/40" />
+            <p className="text-sm font-medium tracking-wide text-primary uppercase">
               Capacidades
             </p>
-            <span className="h-px w-8 bg-linear-to-l from-transparent to-orange-300" />
+            <span className="h-px w-8 bg-linear-to-l from-transparent to-primary/40" />
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             Especialistas no contexto TOTVS
           </h2>
-          <p className="mt-3 text-gray-600">
+          <p className="mt-3 text-muted-foreground">
             Cada agente olha um recorte. O manager consolida o card para revisão humana.
           </p>
         </div>
@@ -66,13 +66,13 @@ export function LandingFeatures() {
             return (
               <article
                 key={feature.title}
-                className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-orange-500/20"
+                className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-primary/20"
               >
-                <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+                <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
                   <Icon className="size-5" />
                 </span>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{feature.body}</p>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
               </article>
             )
           })}

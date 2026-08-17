@@ -12,7 +12,7 @@ export default function HomePage() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 text-sm text-gray-600">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background text-sm text-muted-foreground">
         Carregando...
       </div>
     )
@@ -23,7 +23,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
+    <div className="min-h-[100dvh] bg-background">
       <LandingHeader />
       <main>
         <LandingHero />

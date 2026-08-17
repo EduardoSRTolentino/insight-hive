@@ -51,14 +51,14 @@ export default function ClientsPage() {
     <>
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold text-foreground">Clientes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Acompanhe a evolução das reuniões por conta.
           </p>
         </div>
         <Button
           asChild
-          className="rounded-full bg-orange-600 text-white hover:bg-orange-700"
+          className="rounded-full"
         >
           <Link to="/clients/new">Novo cliente</Link>
         </Button>
@@ -71,7 +71,7 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {!loading && !error && clients.length === 0 && (
         <Card>
@@ -87,7 +87,7 @@ export default function ClientsPage() {
       <div className="space-y-3">
         {clients.map((item) => (
           <Link key={item.id} to={`/clients/${item.id}`} className="block">
-            <Card className="transition-colors hover:border-orange-200 hover:bg-orange-50/40">
+            <Card className="transition-colors hover:border-primary/30 hover:bg-accent/40">
               <CardHeader>
                 <CardTitle className="text-lg">{item.name}</CardTitle>
                 <CardDescription>

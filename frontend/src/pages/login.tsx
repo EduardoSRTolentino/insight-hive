@@ -36,22 +36,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-[100dvh] flex-col justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link
           to="/"
-          className="mb-8 flex items-center justify-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
+          className="mb-8 flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Voltar ao início
         </Link>
         <div className="flex justify-center">
-          <CircleIcon className="h-12 w-12 text-orange-500" />
+          <CircleIcon className="h-12 w-12 text-primary" />
         </div>
-        <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h1 className="mt-6 text-center text-3xl font-extrabold text-foreground">
           Entre na sua conta
         </h1>
-        <p className="mt-2 text-center text-sm text-gray-500">
+        <p className="mt-2 text-center text-sm text-muted-foreground">
           Insight Hive — análise multiagente
         </p>
       </div>
@@ -59,7 +59,7 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <Label htmlFor="email" className="block text-sm font-medium">
               E-mail
             </Label>
             <div className="mt-1">
@@ -72,13 +72,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="voce@empresa.com"
-                className="relative block w-full rounded-full border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus-visible:border-orange-500 focus-visible:ring-orange-500/50"
+                className="relative block w-full rounded-full px-3 py-2"
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <Label htmlFor="password" className="block text-sm font-medium">
               Senha
             </Label>
             <div className="mt-1">
@@ -91,17 +91,17 @@ export default function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
-                className="relative block w-full rounded-full border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus-visible:border-orange-500 focus-visible:ring-orange-500/50"
+                className="relative block w-full rounded-full px-3 py-2"
               />
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center rounded-full bg-orange-600 text-white shadow-sm hover:bg-orange-700 focus-visible:ring-orange-500"
+            className="flex w-full items-center justify-center rounded-full"
           >
             {loading ? (
               <>
@@ -113,9 +113,9 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{' '}
-          <Link to="/signup" className="font-medium text-orange-600 hover:text-orange-700">
+          <Link to="/signup" className="font-medium text-primary hover:text-primary/90">
             Criar conta
           </Link>
         </p>

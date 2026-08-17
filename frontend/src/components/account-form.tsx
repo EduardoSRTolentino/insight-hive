@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import type { UserProfile, UserRegisterPayload, UserUpdatePayload } from '@/lib/types'
 
 const inputClassName =
-  'relative block w-full rounded-full border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus-visible:border-orange-500 focus-visible:ring-orange-500/50'
+  'relative block w-full rounded-full px-3 py-2'
 
 type FormState = {
   full_name: string
@@ -143,7 +143,7 @@ export function AccountForm(props: AccountFormProps) {
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Conta</h2>
+        <h2 className="text-sm font-semibold text-foreground">Conta</h2>
         <div className="space-y-2">
           <Label htmlFor="full_name">Nome completo</Label>
           <Input
@@ -206,8 +206,8 @@ export function AccountForm(props: AccountFormProps) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">Trabalho</h2>
-          <p className="text-xs text-gray-500">Opcional — ajuda a contextualizar suas análises.</p>
+          <h2 className="text-sm font-semibold text-foreground">Trabalho</h2>
+          <p className="text-xs text-muted-foreground">Opcional — ajuda a contextualizar suas análises.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -247,8 +247,8 @@ export function AccountForm(props: AccountFormProps) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">Contato</h2>
-          <p className="text-xs text-gray-500">Opcional.</p>
+          <h2 className="text-sm font-semibold text-foreground">Contato</h2>
+          <p className="text-xs text-muted-foreground">Opcional.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -309,12 +309,12 @@ export function AccountForm(props: AccountFormProps) {
         />
       </section>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button
         type="submit"
         disabled={saving}
-        className="rounded-full bg-orange-600 text-white hover:bg-orange-700"
+        className="rounded-full"
       >
         {saving ? (
           <>

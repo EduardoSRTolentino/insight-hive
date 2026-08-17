@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { AuthProvider } from '@/lib/auth-context'
+import { ThemeProvider } from '@/lib/theme'
 import AccountPage from '@/pages/account'
 import ClientDetailPage from '@/pages/client-detail'
 import ClientNewPage from '@/pages/client-new'
@@ -14,6 +15,7 @@ import UploadPage from '@/pages/upload'
 export default function App() {
   return (
     <ErrorBoundary>
+    <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -30,6 +32,7 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   )
 }

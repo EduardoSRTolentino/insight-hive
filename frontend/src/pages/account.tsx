@@ -8,7 +8,7 @@ export default function AccountPage() {
   const { user, refreshUser } = useAuth()
 
   if (!user) {
-    return <p className="text-sm text-gray-600">Carregando perfil...</p>
+    return <p className="text-sm text-muted-foreground">Carregando perfil...</p>
   }
 
   const handleSubmit = async (payload: UserUpdatePayload) => {

@@ -14,7 +14,7 @@ import {
 } from '@/lib/types'
 
 const selectClassName =
-  'border-input h-9 w-full rounded-full border bg-transparent px-3 text-sm text-gray-900 outline-none focus-visible:border-orange-500 focus-visible:ring-[3px] focus-visible:ring-orange-500/50'
+  'border-input h-9 w-full rounded-full border bg-transparent px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50'
 
 type FormState = {
   name: string
@@ -135,7 +135,7 @@ export function ClientForm({
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Conta</h2>
+        <h2 className="text-sm font-semibold text-foreground">Conta</h2>
         <div className="space-y-2">
           <Label htmlFor="name">Nome da conta</Label>
           <Input
@@ -233,7 +233,7 @@ export function ClientForm({
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Contato principal</h2>
+        <h2 className="text-sm font-semibold text-foreground">Contato principal</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="contact_name">Nome</Label>
@@ -286,13 +286,13 @@ export function ClientForm({
         />
       </section>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
         <Button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-orange-600 text-white hover:bg-orange-700"
+          className="rounded-full"
         >
           {saving ? (
             <>

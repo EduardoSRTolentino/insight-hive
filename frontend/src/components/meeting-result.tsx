@@ -32,7 +32,7 @@ export function MeetingResult({
           {description ? <CardDescription>{description}</CardDescription> : null}
         </CardHeader>
         <CardContent>
-          <p className="text-sm leading-relaxed text-gray-700">{triage}</p>
+          <p className="text-sm leading-relaxed text-foreground">{triage}</p>
         </CardContent>
       </Card>
       <Card>
@@ -40,7 +40,7 @@ export function MeetingResult({
           <CardTitle>Agentes selecionados</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-foreground">
             {selected_agents?.join(', ') || '—'}
           </p>
         </CardContent>

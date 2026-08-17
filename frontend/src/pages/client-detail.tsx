@@ -169,14 +169,14 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
       {detail && (
         <>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{detail.name}</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="text-2xl font-semibold text-foreground">{detail.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {statusLabel(detail.status)}
                 {detail.segment ? ` · ${detail.segment}` : ''}
                 {' · '}
@@ -187,7 +187,7 @@ export default function ClientDetailPage() {
             </div>
             <Button
               asChild
-              className="rounded-full bg-orange-600 text-white hover:bg-orange-700"
+              className="rounded-full"
             >
               <Link to={`/upload?client=${detail.id}`}>Nova análise</Link>
             </Button>
@@ -222,18 +222,18 @@ export default function ClientDetailPage() {
               ) : (
                 <dl className="grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-gray-500">Porte</dt>
-                    <dd className="font-medium text-gray-900">
+                    <dt className="text-muted-foreground">Porte</dt>
+                    <dd className="font-medium text-foreground">
                       {companySizeLabel(detail.company_size) ?? '—'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Dono interno</dt>
-                    <dd className="font-medium text-gray-900">{display(detail.owner)}</dd>
+                    <dt className="text-muted-foreground">Dono interno</dt>
+                    <dd className="font-medium text-foreground">{display(detail.owner)}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Website</dt>
-                    <dd className="font-medium text-gray-900">
+                    <dt className="text-muted-foreground">Website</dt>
+                    <dd className="font-medium text-foreground">
                       {detail.website ? (
                         <a
                           href={
@@ -243,7 +243,7 @@ export default function ClientDetailPage() {
                           }
                           target="_blank"
                           rel="noreferrer"
-                          className="text-orange-600 hover:text-orange-700"
+                          className="text-primary hover:text-primary/90"
                         >
                           {detail.website}
                         </a>
@@ -253,27 +253,27 @@ export default function ClientDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Cidade / UF</dt>
-                    <dd className="font-medium text-gray-900">{location || '—'}</dd>
+                    <dt className="text-muted-foreground">Cidade / UF</dt>
+                    <dd className="font-medium text-foreground">{location || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Contato</dt>
-                    <dd className="font-medium text-gray-900">
+                    <dt className="text-muted-foreground">Contato</dt>
+                    <dd className="font-medium text-foreground">
                       {detail.contact_name
                         ? `${detail.contact_name}${detail.contact_role ? ` · ${detail.contact_role}` : ''}`
                         : '—'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">E-mail / telefone</dt>
-                    <dd className="font-medium text-gray-900">
+                    <dt className="text-muted-foreground">E-mail / telefone</dt>
+                    <dd className="font-medium text-foreground">
                       {[detail.contact_email, detail.contact_phone].filter(Boolean).join(' · ') || '—'}
                     </dd>
                   </div>
                   {detail.notes && (
                     <div className="sm:col-span-2">
-                      <dt className="text-gray-500">Observações</dt>
-                      <dd className="whitespace-pre-wrap font-medium text-gray-900">{detail.notes}</dd>
+                      <dt className="text-muted-foreground">Observações</dt>
+                      <dd className="whitespace-pre-wrap font-medium text-foreground">{detail.notes}</dd>
                     </div>
                   )}
                 </dl>
@@ -292,7 +292,7 @@ export default function ClientDetailPage() {
             </Card>
           )}
 
-          <ol className="relative space-y-3 border-l border-gray-200 pl-6">
+          <ol className="relative space-y-3 border-l border-border pl-6">
             {detail.meetings.map((item) => {
               const active = selectedId === item.id
               return (
@@ -300,14 +300,14 @@ export default function ClientDetailPage() {
                   <span
                     className={cn(
                       'absolute top-5 -left-[1.9rem] size-2.5 rounded-full',
-                      active ? 'bg-orange-500' : 'bg-gray-300'
+                      active ? 'bg-primary' : 'bg-border'
                     )}
                     aria-hidden="true"
                   />
                   <div
                     className={cn(
                       'flex items-start justify-between gap-3 rounded-xl border px-4 py-3',
-                      active ? 'border-orange-200 bg-orange-50/50' : 'border-gray-200 bg-white'
+                      active ? 'border-primary/30 bg-accent' : 'border-border bg-card'
                     )}
                   >
                     <button
@@ -315,10 +315,10 @@ export default function ClientDetailPage() {
                       className="min-w-0 flex-1 text-left"
                       onClick={() => selectMeeting(item.id)}
                     >
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         {formatDateTime(item.created_at)}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {item.source_filename || 'Arquivo sem nome'}
                         {' · '}
                         {item.status}
@@ -328,7 +328,7 @@ export default function ClientDetailPage() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 text-gray-400 hover:text-red-600"
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => void handleDelete(item.id)}
                       aria-label="Remover reunião"
                     >

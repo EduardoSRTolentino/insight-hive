@@ -114,9 +114,9 @@ export default function UploadPage() {
               <Skeleton className="h-9 w-28 rounded-full" />
             </div>
           ) : clients.length === 0 ? (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Nenhum cliente cadastrado.{' '}
-              <Link to="/clients/new" className="font-medium text-orange-600 hover:text-orange-700">
+              <Link to="/clients/new" className="font-medium text-primary hover:text-primary/90">
                 Criar cliente
               </Link>
             </p>
@@ -128,7 +128,7 @@ export default function UploadPage() {
                   id="client"
                   value={clientId}
                   onChange={(event) => setClientId(event.target.value)}
-                  className="border-input h-9 w-full rounded-full border bg-transparent px-3 text-sm text-gray-900 outline-none focus-visible:border-orange-500 focus-visible:ring-[3px] focus-visible:ring-orange-500/50"
+                  className="border-input h-9 w-full rounded-full border bg-transparent px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <option value="">Selecione um cliente</option>
                   {clients.map((item) => (
@@ -150,14 +150,14 @@ export default function UploadPage() {
                     setResult(null)
                     setError('')
                   }}
-                  className="h-auto cursor-pointer rounded-full py-2 file:mr-4 file:rounded-full file:border-0 file:bg-orange-50 file:px-4 file:py-1 file:text-sm file:font-medium file:text-orange-700"
+                  className="h-auto cursor-pointer rounded-full py-2 file:mr-4 file:rounded-full file:border-0 file:bg-accent file:px-4 file:py-1 file:text-sm file:font-medium file:text-accent-foreground"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={loading || !file || !clientId}
-                className="rounded-full bg-orange-600 text-white hover:bg-orange-700"
+                className="rounded-full"
               >
                 {loading ? (
                   <>
@@ -173,7 +173,7 @@ export default function UploadPage() {
 
           {loading && (
             <div className="mt-6 space-y-3">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 A análise pode levar algum tempo, pois roda o modelo de
                 linguagem localmente. Aguarde...
               </p>
@@ -183,7 +183,7 @@ export default function UploadPage() {
             </div>
           )}
 
-          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
         </CardContent>
       </Card>
 
@@ -193,13 +193,13 @@ export default function UploadPage() {
           selected_agents={result.selected_agents}
           final_report={result.final_report}
           header={
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Análise salva em{' '}
-              <span className="font-medium text-gray-900">{result.client_name}</span>
+              <span className="font-medium text-foreground">{result.client_name}</span>
               .{' '}
               <Link
                 to={`/clients/${result.client_id}?meeting=${result.id}`}
-                className="font-medium text-orange-600 hover:text-orange-700"
+                className="font-medium text-primary hover:text-primary/90"
               >
                 Ver no histórico do cliente
               </Link>
