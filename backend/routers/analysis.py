@@ -1,104 +1,97 @@
-"""Rota de análise: upload de .csv/.json que aciona o sistema multiagente."""
-
-import logging
+"""Rota de análise: enfileira o upload e devolve um job para polling."""
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
-from ollama import ResponseError
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from db import SessionLocal
+from analysis_jobs import enqueue
+from db import SessionLocal, get_db
 from file_input import FileInputError
-from graph.builder import get_compiled_graph
-from models import Client, Meeting
+from models import AnalysisJob, User
+from ownership import get_owned_client, get_owned_job
 from prepare_analysis_input import prepare_graph_input
-from schemas.clients import MeetingDetail
-from schemas.intelligence_card import parse_intelligence_card
-from security import get_current_user
+from routers.clients import meeting_detail
+from schemas.clients import AnalysisJobPublic
+from security import get_current_user, get_current_user_id
 from settings import get_settings
-
-logger = logging.getLogger(__name__)
+from uploads import raise_upload_too_large, read_upload_capped
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
 
-@router.post("/upload", response_model=MeetingDetail)
+def job_public(job: AnalysisJob) -> AnalysisJobPublic:
+    meeting = None
+    if job.meeting_id and job.meeting is not None:
+        meeting = meeting_detail(job.meeting)
+    status_value = job.status if job.status in {"queued", "running", "done", "failed"} else "failed"
+    return AnalysisJobPublic(
+        id=job.id,
+        status=status_value,
+        source_filename=job.source_filename,
+        created_at=job.created_at,
+        error_detail=job.error_detail,
+        meeting=meeting,
+    )
+
+
+@router.post("/upload", response_model=AnalysisJobPublic, status_code=status.HTTP_202_ACCEPTED)
 def upload(
     file: UploadFile,
     client_id: int = Form(...),
-    current_user: str = Depends(get_current_user),
-) -> MeetingDetail:
-    del current_user
+    user_id: int = Depends(get_current_user_id),
+) -> AnalysisJobPublic:
     if not file.filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Informe o nome de um arquivo.",
         )
 
-    with SessionLocal() as db:
-        client = db.get(Client, client_id)
-        if client is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cliente não encontrado.",
-            )
-        client_pk = client.id
-        client_name = client.name
-
-    content = file.file.read()
     max_bytes = get_settings().max_upload_bytes
-    if len(content) > max_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Arquivo excede o limite de {max_bytes} bytes.",
-        )
+    declared = getattr(file, "size", None)
+    if isinstance(declared, int) and declared > max_bytes:
+        raise_upload_too_large(max_bytes)
+
+    with SessionLocal() as db:
+        user = db.get(User, user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciais inválidas ou token expirado.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        client = get_owned_client(db, user, client_id)
+        client_pk = client.id
+
+    content = read_upload_capped(file, max_bytes)
 
     try:
         entrada = prepare_graph_input(file.filename, content)
     except FileInputError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    try:
-        resultado = get_compiled_graph().invoke({"input": entrada, "reports": []})
-    except (ResponseError, ConnectionError, TimeoutError, OSError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "O modelo local (Ollama) falhou durante a análise. "
-                "Tente novamente em instantes; se persistir, reinicie o Ollama "
-                "ou use um arquivo menor."
-            ),
-        ) from exc
-    except Exception as exc:
-        logger.exception("Falha inesperada na análise.")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Falha inesperada na análise.",
-        ) from exc
+    with SessionLocal() as db:
+        job = AnalysisJob(
+            user_id=user_id,
+            client_id=client_pk,
+            source_filename=file.filename or "",
+            input_text=entrada,
+            status="queued",
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        public = job_public(job)
 
-    try:
-        with SessionLocal() as db:
-            meeting = Meeting(
-                client_id=client_pk,
-                source_filename=file.filename or "",
-                triage=resultado.get("triage") or "",
-                selected_agents=list(resultado.get("selected_agents") or []),
-                final_report=parse_intelligence_card(resultado.get("final_report")),
-            )
-            db.add(meeting)
-            db.commit()
-            db.refresh(meeting)
-            return MeetingDetail(
-                id=meeting.id,
-                client_id=client_pk,
-                client_name=client_name,
-                source_filename=meeting.source_filename,
-                created_at=meeting.created_at,
-                triage=meeting.triage,
-                selected_agents=list(meeting.selected_agents or []),
-                final_report=meeting.final_report or {},
-            )
-    except IntegrityError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cliente não encontrado.",
-        ) from exc
+    enqueue(job.id)
+    return public
+
+
+@router.get("/jobs/{job_id}", response_model=AnalysisJobPublic)
+def get_job(
+    job_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AnalysisJobPublic:
+    job = get_owned_job(db, current_user, job_id)
+    if job.meeting is not None:
+        _ = job.meeting.client
+    return job_public(job)

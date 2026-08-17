@@ -145,3 +145,12 @@ class MeetingDetail(BaseModel):
     triage: str
     selected_agents: list[str]
     final_report: dict
+
+
+class AnalysisJobPublic(BaseModel):
+    id: int
+    status: Literal["queued", "running", "done", "failed"]
+    source_filename: str
+    created_at: UtcDateTime
+    error_detail: str | None = None
+    meeting: MeetingDetail | None = None
