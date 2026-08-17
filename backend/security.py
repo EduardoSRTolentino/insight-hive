@@ -23,24 +23,60 @@ logger = logging.getLogger(__name__)
 INSECURE_APP_PASSWORD = "admin"
 INSECURE_JWT_SECRET_KEY = "change-this-secret-key"
 JWT_ALGORITHM = "HS256"
+# HS256 é quebrável offline a partir de qualquer token emitido se o segredo
+# for curto; abaixo disso não é "só o default", é fraco de qualquer jeito.
+MIN_JWT_SECRET_LENGTH = 32
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def assert_secure_secrets() -> None:
-    """Recusa defaults inseguros em produção; em development só avisa."""
+    """Recusa defaults inseguros (ou segredo curto) em produção; em
+    development só avisa."""
     settings = get_settings()
-    using_defaults = (
-        settings.app_password == INSECURE_APP_PASSWORD
-        or settings.jwt_secret_key == INSECURE_JWT_SECRET_KEY
-    )
-    if not using_defaults:
+    problems: list[str] = []
+    if settings.app_password == INSECURE_APP_PASSWORD:
+        problems.append("APP_PASSWORD ainda é o default inseguro")
+    if settings.jwt_secret_key == INSECURE_JWT_SECRET_KEY:
+        problems.append("JWT_SECRET_KEY ainda é o default inseguro")
+    elif len(settings.jwt_secret_key) < MIN_JWT_SECRET_LENGTH:
+        problems.append(
+            f"JWT_SECRET_KEY tem menos de {MIN_JWT_SECRET_LENGTH} caracteres"
+        )
+    if not problems:
+        return
+
+    message = "Secrets inseguros detectados: " + "; ".join(problems) + "."
+    if settings.app_env.lower() in ("production", "prod"):
+        raise RuntimeError(message)
+    logger.warning(message)
+
+
+def _admin_uses_insecure_password(db: Session) -> bool:
+    """True se o admin semeado (`bootstrap_admin_email`) ainda loga com a senha
+    insegura padrão — mesmo que `APP_PASSWORD` no ambiente atual já tenha
+    mudado. A migração 002 grava o hash uma única vez a partir do
+    `APP_PASSWORD` da época; trocar o env depois não re-hasheia a conta já
+    criada, então `assert_secure_secrets` sozinho não pega esse caso."""
+    user = db.scalar(select(User).where(User.email == bootstrap_admin_email()))
+    if user is None:
+        return False
+    return verify_password(INSECURE_APP_PASSWORD, user.password_hash)
+
+
+def assert_secure_admin_seed(db: Session) -> None:
+    """Recusa subir em produção se a conta admin semeada ainda usa a senha
+    insegura padrão, independente do que `APP_PASSWORD` diga hoje."""
+    if not _admin_uses_insecure_password(db):
         return
 
     message = (
-        "Secrets inseguros detectados. Preencha APP_PASSWORD e JWT_SECRET_KEY no .env."
+        "A conta admin semeada ainda loga com a senha insegura padrão "
+        f"('{INSECURE_APP_PASSWORD}'), mesmo que APP_PASSWORD no ambiente atual "
+        "seja outro — mudar o env não re-hasheia uma conta já criada. Troque a "
+        "senha dessa conta no banco antes de subir em produção."
     )
-    if settings.app_env.lower() in ("production", "prod"):
+    if get_settings().app_env.lower() in ("production", "prod"):
         raise RuntimeError(message)
     logger.warning(message)
 

@@ -5,6 +5,9 @@ services:
     environment:
       APP_ENV: production
       OLLAMA_BASE_URL: http://ollama:11434
+      # Único hop confiável é o nginx deste compose: ele sobrescreve X-Real-IP
+      # e só acrescenta ao X-Forwarded-For, nunca deixa o cliente forjar.
+      TRUST_PROXY_HEADERS: "1"
     volumes:
       - backend_data:/app/backend/data
     depends_on:

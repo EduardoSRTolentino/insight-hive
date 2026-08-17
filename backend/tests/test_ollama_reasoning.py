@@ -56,6 +56,16 @@ def test_chat_kwargs_omit_reasoning_for_qwen(monkeypatch) -> None:
     _reset_llm_caches()
 
 
+def test_chat_kwargs_include_client_timeout(monkeypatch) -> None:
+    # Sem isso o httpx do client Ollama fica sem teto (timeout=None) e uma
+    # geração travada prende a thread do worker para sempre.
+    _reset_llm_caches()
+    monkeypatch.setattr("agents.base.model_supports_thinking", lambda *_args: False)
+    kwargs = _chat_ollama_kwargs()
+    assert kwargs["client_kwargs"] == {"timeout": 180}
+    _reset_llm_caches()
+
+
 def test_mark_thinking_unsupported_disables_reasoning(monkeypatch) -> None:
     _reset_llm_caches()
     monkeypatch.setattr(

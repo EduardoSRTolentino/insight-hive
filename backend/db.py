@@ -7,7 +7,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.orm import Session, sessionmaker
 
 from settings import get_settings
@@ -38,6 +38,18 @@ if DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+if DATABASE_URL.startswith("sqlite"):
+    # As FKs (`ownership`, `analysis_jobs.meeting_id` etc.) só existem no DDL
+    # se essa pragma estiver ligada por conexão — o SQLite não aplica por
+    # padrão. Só afeta as conexões deste engine (as do app em runtime); as
+    # migrações do Alembic abrem a própria conexão e não passam por aqui.
+    @event.listens_for(engine, "connect")
+    def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

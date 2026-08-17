@@ -38,7 +38,16 @@ def _normalize_phrase(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip().lower())
 
 
-def is_acknowledgement(text: str, phrases: Iterable[str] | None = None) -> bool:
+def is_acknowledgement(
+    text: str,
+    phrases: Iterable[str] | None = None,
+    *,
+    preceded_by_question: bool = False,
+) -> bool:
+    """Concordância vazia ("Sim", "Ok"...). Não conta se responde a uma pergunta
+    (voto/decisão formal) — ver `heuristic_labels`."""
+    if preceded_by_question:
+        return False
     phrases = tuple(phrases) if phrases is not None else default_acknowledgements()
     normalized = _normalize_phrase(text)
     if _token_count(normalized) > 3:
@@ -52,15 +61,50 @@ _TECH_NOISE = re.compile(
 )
 
 
-def is_greeting_or_farewell(text: str, phrases: Iterable[str] | None = None) -> bool:
+def _phrase_pattern(phrase: str) -> re.Pattern[str]:
+    return re.compile(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", re.UNICODE)
+
+
+# Turno de borda que casa uma saudação/despedida: se o que sobra depois de tirar
+# a cortesia tiver mais que isso, o turno é substantivo e só a cortesia sai —
+# o turno inteiro não é descartado.
+GREETING_TRIM_REMAINDER_MAX = 3
+
+
+def find_greeting_or_farewell_phrase(
+    text: str, phrases: Iterable[str] | None = None
+) -> str | None:
+    """Acha a frase de saudação/despedida em `text`, ou None.
+
+    Exige fronteira de palavra — "oi" não deve casar dentro de "dois", nem
+    "ola" dentro de "escola" — e um teto de tokens no turno inteiro, para não
+    tratar um turno longo como cortesia só porque ele contém uma palavra da
+    lista em algum lugar.
+    """
     phrases = tuple(phrases) if phrases is not None else default_greetings()
     normalized = _normalize_phrase(text)
+    if normalized in set(phrases):
+        return normalized
+    if _token_count(normalized) > 8:
+        return None
     for phrase in phrases:
-        if normalized == phrase or normalized.startswith(phrase + " ") or normalized.endswith(" " + phrase):
-            return True
-        if phrase in normalized and _token_count(normalized) <= 8:
-            return True
-    return False
+        if _phrase_pattern(phrase).search(normalized):
+            return phrase
+    return None
+
+
+def is_greeting_or_farewell(text: str, phrases: Iterable[str] | None = None) -> bool:
+    return find_greeting_or_farewell_phrase(text, phrases) is not None
+
+
+def _strip_matched_phrase(text: str, phrase: str) -> str:
+    """Remove a cortesia do turno (com pontuação vizinha), mantendo o resto."""
+    pattern = re.compile(
+        r"(?<!\w)" + re.escape(phrase) + r"(?!\w)[\s,.:;!?-]*",
+        re.IGNORECASE | re.UNICODE,
+    )
+    stripped = pattern.sub(" ", text, count=1)
+    return re.sub(r"\s+", " ", stripped).strip(" ,.-")
 
 
 def is_tech_noise(text: str) -> bool:
@@ -71,26 +115,41 @@ def heuristic_labels(
     turns: list[Turn],
     *,
     edge_window: int = 3,
-) -> dict[str, Label]:
-    """Classifica turnos de forma determinística. Ambíguos não entram no dict."""
+) -> tuple[dict[str, Label], dict[str, str]]:
+    """Classifica turnos de forma determinística. Ambíguos não entram no dict.
+
+    Devolve também um mapa `turn_id -> texto` para turnos de borda que
+    misturam uma cortesia com conteúdo substantivo: só a cortesia é removida,
+    em vez do turno inteiro ser descartado (ex.: "oi, dois milhões no
+    orçamento" não pode virar DROP por causa do "oi").
+    """
     labels: dict[str, Label] = {}
+    text_overrides: dict[str, str] = {}
     n = len(turns)
     for index, turn in enumerate(turns):
         text = turn["text"]
         tid = turn["id"]
-        if is_acknowledgement(text):
+        prev_text = turns[index - 1]["text"] if index > 0 else ""
+        preceded_by_question = prev_text.rstrip().endswith("?")
+        if is_acknowledgement(text, preceded_by_question=preceded_by_question):
             labels[tid] = "DROP"
             continue
         if is_tech_noise(text):
             labels[tid] = "DROP"
             continue
         at_edge = index < edge_window or index >= max(0, n - edge_window)
-        if at_edge and is_greeting_or_farewell(text):
-            labels[tid] = "DROP"
-            continue
+        if at_edge:
+            phrase = find_greeting_or_farewell_phrase(text)
+            if phrase is not None:
+                trimmed = _strip_matched_phrase(text, phrase)
+                if _token_count(trimmed) <= GREETING_TRIM_REMAINDER_MAX:
+                    labels[tid] = "DROP"
+                elif trimmed != text:
+                    text_overrides[tid] = trimmed
+                continue
         if _token_count(text) >= 12:
             labels[tid] = "KEEP"
-    return labels
+    return labels, text_overrides
 
 
 def _extract_json_array(raw: str) -> list[dict]:
@@ -129,7 +188,7 @@ def classify_with_llm(
     *,
     edge_window: int = 3,
 ) -> dict[str, Label]:
-    base = heuristic_labels(turns, edge_window=edge_window)
+    base, _text_overrides = heuristic_labels(turns, edge_window=edge_window)
     ambiguous = [t for t in turns if t["id"] not in base]
     if not ambiguous:
         return base
@@ -164,9 +223,14 @@ def filter_turns(
     edge_window: int = 3,
 ) -> tuple[list[Turn], int, bool]:
     if llm_client is None:
-        labels = heuristic_labels(turns, edge_window=edge_window)
-        # sem LLM: só remove DROPs heurísticos; resto KEEP implícito
-        kept = [t for t in turns if labels.get(t["id"]) != "DROP"]
+        labels, text_overrides = heuristic_labels(turns, edge_window=edge_window)
+        # sem LLM: só remove DROPs heurísticos; resto KEEP implícito. Turnos
+        # com cortesia+conteúdo levam o texto aparado, não a exclusão.
+        kept = [
+            {**t, "text": text_overrides[t["id"]]} if t["id"] in text_overrides else t
+            for t in turns
+            if labels.get(t["id"]) != "DROP"
+        ]
         dropped = len(turns) - len(kept)
         return kept, dropped, False
 

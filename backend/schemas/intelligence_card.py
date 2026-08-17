@@ -152,3 +152,11 @@ def parse_intelligence_card(raw: str | dict[str, Any] | None) -> IntelligenceCar
         card[field] = parse_card_point(data.get(field))
 
     return card
+
+
+def is_empty_card(card: IntelligenceCard) -> bool:
+    """True quando a síntese não deixou nada aproveitável — JSON inválido ou
+    truncado faz `parse_intelligence_card` cair nos defaults em todo campo."""
+    return card["conta"] == DEFAULT_VALUE and all(
+        card[field]["valor"] == DEFAULT_VALUE for field in POINT_FIELDS
+    )

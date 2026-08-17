@@ -1,5 +1,6 @@
 """Nó genérico de agente especialista e roteamento paralelo via Send."""
 
+import logging
 from typing import Any, Callable, List
 
 from langgraph.types import Send
@@ -8,7 +9,14 @@ from agents.base import MAX_SPECIALISTS, invoke_agent, truncate_text
 from config.agents_config import SPECIALIST_AGENTS, SpecialistAgentConfig
 from graph.state import State
 
+logger = logging.getLogger(__name__)
+
 ECOSYSTEM_AGENT_KEY = "ecossistema_totvs"
+
+SPECIALIST_FAILURE_CONTENT = (
+    "[Este especialista falhou ao gerar o relatório (erro no modelo local). "
+    "Ignore esta seção na síntese; não invente dados para preenchê-la.]"
+)
 
 
 def specialist_node_name(agent_key: str) -> str:
@@ -40,11 +48,22 @@ def make_specialist_node(agent_config: SpecialistAgentConfig) -> Callable[[State
         )
         if agent_config["key"] == ECOSYSTEM_AGENT_KEY:
             user_content += "\n\n" + _ecosystem_catalog_block(state.get("input") or "")
-        content = invoke_agent(
-            agent_config["system_prompt"],
-            user_content,
-            json_mode=True,
-        )
+        try:
+            content = invoke_agent(
+                agent_config["system_prompt"],
+                user_content,
+                json_mode=True,
+            )
+        except Exception:
+            # Um especialista falhando não pode derrubar a análise inteira —
+            # `invoke_agent` já esgotou os retries dele; melhor a síntese
+            # seguir sem esta seção do que perder o trabalho dos outros
+            # especialistas que deram certo.
+            logger.exception(
+                "Especialista '%s' falhou; seguindo sem o relatório dele.",
+                agent_config["key"],
+            )
+            content = SPECIALIST_FAILURE_CONTENT
         report = {
             "agent_key": agent_config["key"],
             "agent_name": agent_config["name"],

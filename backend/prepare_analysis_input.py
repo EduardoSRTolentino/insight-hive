@@ -10,10 +10,14 @@ from __future__ import annotations
 import logging
 import os
 
-from file_input import FileInputError, load_file_input, parse_file_content
+from file_input import SUPPORTED_EXTENSIONS, FileInputError, load_file_input, parse_file_content
 from settings import get_settings
 
 logger = logging.getLogger(__name__)
+
+
+def _has_supported_extension(filename: str) -> bool:
+    return os.path.splitext(filename)[1].lower() in SUPPORTED_EXTENSIONS
 
 
 def _transcript_clean_enabled() -> bool:
@@ -56,7 +60,9 @@ def _clean_or_none(source: str | bytes, filename: str) -> str | None:
 
 def prepare_graph_input(filename: str, content: bytes) -> str:
     """Monta o `input` do grafo a partir de um upload (bytes)."""
-    if not filename or not _transcript_clean_enabled():
+    if not filename or not _transcript_clean_enabled() or not _has_supported_extension(filename):
+        # Extensão fora da allowlist (ou sem extensão): não deixa o cleaner
+        # sniffar o conteúdo e aceitar algo que `parse_file_content` recusaria.
         return parse_file_content(filename, content)
 
     cleaned = _clean_or_none(source=content, filename=filename)
@@ -67,7 +73,7 @@ def prepare_graph_input(filename: str, content: bytes) -> str:
 
 def prepare_graph_input_from_path(path: str) -> str:
     """Monta o `input` do grafo a partir de um arquivo em disco."""
-    if not path or not _transcript_clean_enabled():
+    if not path or not _transcript_clean_enabled() or not _has_supported_extension(path):
         return load_file_input(path)
 
     cleaned = _clean_or_none(source=path, filename=path)

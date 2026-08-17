@@ -46,8 +46,10 @@ def remove_fillers(text: str, fillers: Iterable[str] | None = None) -> str:
 
 
 def collapse_stutters(text: str) -> str:
-    # palavra repetida imediatamente
-    text = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", text, flags=re.IGNORECASE)
+    # palavra repetida imediatamente (mas não números — "500 500 reais" não é gagueira)
+    text = re.sub(
+        r"\b(?!\d+\b)(\w+)(?:\s+\1\b)+", r"\1", text, flags=re.IGNORECASE
+    )
     # bigrama repetido (a gente a gente)
     text = re.sub(
         r"\b(\w+\s+\w+)(?:\s+\1\b)+",

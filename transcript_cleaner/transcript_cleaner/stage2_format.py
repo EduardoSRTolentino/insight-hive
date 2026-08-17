@@ -20,7 +20,8 @@ def normalize_timestamp(value: str | None) -> str | None:
     if not match:
         # tenta ISO-like ...T12:34:56
         tail = raw[-12:]
-        match = _TS_RE.search(tail.replace("T", " ").split()[-1])
+        parts = tail.replace("T", " ").split()
+        match = _TS_RE.search(parts[-1]) if parts else None
         if not match:
             return raw
     hours = int(match.group(1) or 0)

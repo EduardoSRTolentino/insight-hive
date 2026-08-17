@@ -84,6 +84,10 @@ def _chat_ollama_kwargs(
         "model": settings.ollama_model,
         "base_url": settings.ollama_base_url,
         "num_predict": settings.num_predict if num_predict is None else num_predict,
+        # Sem isso o httpx do client Ollama não tem teto (timeout=None): uma
+        # geração travada prende a única thread do worker para sempre, e a
+        # fila de todo mundo para junto (ver invoke_agent).
+        "client_kwargs": {"timeout": settings.ollama_timeout_seconds},
     }
     reasoning = effective_reasoning(
         settings.ollama_reasoning,
@@ -173,7 +177,13 @@ def invoke_agent(
             with _llm_lock:
                 response = model.invoke(messages)
             return _coerce_message_content(response)
-        except (ResponseError, ConnectionError, TimeoutError, OSError) as exc:
+        except (
+            ResponseError,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            httpx.TimeoutException,
+        ) as exc:
             last_error = exc
             if _thinking_rejected(exc) and "reasoning" in updates:
                 mark_thinking_unsupported()
@@ -186,5 +196,6 @@ def invoke_agent(
                 break
             time.sleep(RETRY_BASE_SECONDS * attempt)
 
-    assert last_error is not None
+    if last_error is None:
+        raise RuntimeError("invoke_agent esgotou as tentativas sem erro registrado.")
     raise last_error

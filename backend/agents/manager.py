@@ -12,8 +12,7 @@ from agents.base import (
 from config.agents_config import SPECIALIST_AGENTS
 from graph.state import State
 from schemas.intelligence_card import (
-    DEFAULT_VALUE,
-    POINT_FIELDS,
+    is_empty_card,
     loads_json_object,
     parse_intelligence_card,
 )
@@ -144,9 +143,10 @@ def manager_synthesis(state: State) -> dict[str, Any]:
         json_mode=True,
     )
     card = parse_intelligence_card(raw_response)
-    if card["conta"] == DEFAULT_VALUE and all(
-        card[field]["valor"] == DEFAULT_VALUE for field in POINT_FIELDS
-    ):
+    if is_empty_card(card):
+        # analysis_jobs.process_job trata isso como falha (não salva um card
+        # vazio como se fosse sucesso) — o warning aqui ajuda a diagnosticar
+        # se foi JSON truncado ou realmente inválido.
         logger.warning(
             "Síntese do card vazia (JSON inválido ou truncado). raw=%s",
             truncate_text(raw_response, 800),

@@ -159,3 +159,29 @@ def test_auth_rate_limit(client: TestClient, monkeypatch: pytest.MonkeyPatch) ->
     assert third.status_code == 429
     assert "Retry-After" in third.headers
     auth_limiter.clear()
+
+
+def test_auth_rate_limit_ignores_spoofed_forwarded_header(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Sem TRUST_PROXY_HEADERS (default), variar X-Forwarded-For a cada
+    # tentativa não deve resetar o limite — o backend não está atrás do
+    # nginx confiável neste cenário de teste.
+    monkeypatch.setenv("AUTH_RATE_LIMIT", "1")
+    monkeypatch.delenv("TRUST_PROXY_HEADERS", raising=False)
+    get_settings.cache_clear()
+    auth_limiter.clear()
+    payload = {"full_name": "Ana", "password": "password12"}
+    first = client.post(
+        "/api/auth/register",
+        json={**payload, "email": "xff1@example.com"},
+        headers={"X-Forwarded-For": "1.1.1.1"},
+    )
+    assert first.status_code == 200
+    second = client.post(
+        "/api/auth/register",
+        json={**payload, "email": "xff2@example.com"},
+        headers={"X-Forwarded-For": "2.2.2.2"},
+    )
+    assert second.status_code == 429
+    auth_limiter.clear()

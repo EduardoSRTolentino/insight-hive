@@ -29,8 +29,13 @@ def _decode(content: bytes | str) -> str:
         return content
     try:
         return content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    # Exportações do Excel/Windows em pt-BR costumam sair em cp1252, não UTF-8.
+    try:
+        return content.decode("cp1252")
     except UnicodeDecodeError as exc:
-        raise NormalizeError(f"Não foi possível ler como UTF-8: {exc}") from exc
+        raise NormalizeError(f"Não foi possível ler como UTF-8 ou cp1252: {exc}") from exc
 
 
 def _normalize_key(key: str) -> str:

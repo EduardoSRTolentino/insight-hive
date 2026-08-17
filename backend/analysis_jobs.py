@@ -6,6 +6,7 @@ import logging
 from queue import Queue
 from threading import Thread
 
+import httpx
 from ollama import ResponseError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from db import SessionLocal
 from graph.builder import get_compiled_graph
 from models import AnalysisJob, Meeting
-from schemas.intelligence_card import parse_intelligence_card
+from schemas.intelligence_card import is_empty_card, parse_intelligence_card
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,12 @@ OLLAMA_FAIL_DETAIL = (
     "O modelo local (Ollama) falhou durante a análise. "
     "Tente novamente em instantes; se persistir, reinicie o Ollama "
     "ou use um arquivo menor."
+)
+
+EMPTY_CARD_DETAIL = (
+    "A síntese não retornou dados aproveitáveis (resposta do modelo vazia ou "
+    "truncada). Tente novamente; se persistir, aumente NUM_PREDICT_SYNTHESIS "
+    "ou reduza MAX_SPECIALISTS."
 )
 
 _queue: Queue[int] = Queue()
@@ -84,13 +91,22 @@ def process_job(job_id: int) -> None:
 
     try:
         resultado = get_compiled_graph().invoke({"input": input_text, "reports": []})
-    except (ResponseError, ConnectionError, TimeoutError, OSError):
+    except (ResponseError, ConnectionError, TimeoutError, OSError, httpx.TimeoutException):
         logger.exception("Ollama falhou na análise job_id=%s", job_id)
         _fail(job_id, OLLAMA_FAIL_DETAIL)
         return
     except Exception:
         logger.exception("Falha inesperada na análise job_id=%s", job_id)
         _fail(job_id, "Falha inesperada na análise.")
+        return
+
+    card = parse_intelligence_card(resultado.get("final_report"))
+    if is_empty_card(card):
+        # manager_synthesis já logou o raw da resposta. Aqui a decisão de
+        # produto: não salvar uma reunião com o card todo em "Não
+        # identificado" como se fosse um resultado válido — melhor `failed`
+        # com um detalhe acionável do que sucesso vazio.
+        _fail(job_id, EMPTY_CARD_DETAIL)
         return
 
     try:
@@ -103,7 +119,7 @@ def process_job(job_id: int) -> None:
                 source_filename=filename,
                 triage=resultado.get("triage") or "",
                 selected_agents=list(resultado.get("selected_agents") or []),
-                final_report=parse_intelligence_card(resultado.get("final_report")),
+                final_report=card,
             )
             db.add(meeting)
             db.flush()

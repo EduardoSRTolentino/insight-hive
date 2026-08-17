@@ -7,7 +7,7 @@ from typing import Any
 
 from .llm import LlmClient
 from .models import CleanResult, Turn, empty_stats
-from .normalize import normalize_content, normalize_file
+from .normalize import NormalizeError, normalize_content, normalize_file
 from .stage1_text import clean_turns_text
 from .stage2_format import format_turns
 from .stage3_filter import filter_turns
@@ -45,6 +45,14 @@ def clean_turns(
     stats["llm_used"] = llm_used
 
     formatted, speaker_map, cleaned_text = format_turns(filtered)
+
+    if not formatted:
+        # Filtro removeu tudo (reunião só de saudação/concordância): não há nada
+        # substantivo para analisar. Deixa o chamador cair para o texto bruto,
+        # em vez de mandar "# Speakers" sozinho para o grafo.
+        raise NormalizeError(
+            "A limpeza da transcrição removeu todos os turnos; nada substantivo restou."
+        )
 
     stage4_used = False
     if llm_client is not None and should_summarize(

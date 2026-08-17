@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from threading import Lock
 
 from fastapi import HTTPException, Request, status
@@ -11,7 +10,7 @@ from fastapi import HTTPException, Request, status
 
 class SlidingWindowLimiter:
     def __init__(self) -> None:
-        self._hits: dict[str, list[float]] = defaultdict(list)
+        self._hits: dict[str, list[float]] = {}
         self._lock = Lock()
 
     def clear(self) -> None:
@@ -22,9 +21,15 @@ class SlidingWindowLimiter:
         now = time.monotonic()
         cutoff = now - window_seconds
         with self._lock:
-            hits = [stamp for stamp in self._hits[key] if stamp > cutoff]
+            # `.get(key, ())` em vez de indexar um defaultdict: só cria entrada
+            # para chaves que de fato fizeram request, então uma chave forjada
+            # (ex.: X-Forwarded-For variando a cada tentativa) não infla o dict.
+            hits = [stamp for stamp in self._hits.get(key, ()) if stamp > cutoff]
             if len(hits) >= max_requests:
-                self._hits[key] = hits
+                if hits:
+                    self._hits[key] = hits
+                else:
+                    self._hits.pop(key, None)
                 return False
             hits.append(now)
             self._hits[key] = hits
@@ -35,9 +40,26 @@ auth_limiter = SlidingWindowLimiter()
 
 
 def client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip() or "unknown"
+    """IP do cliente para rate limit.
+
+    Só confia em X-Real-IP / X-Forwarded-For quando `TRUST_PROXY_HEADERS=1`
+    (ligado no compose de produção, atrás do nginx, que sobrescreve X-Real-IP
+    e só *acrescenta* ao X-Forwarded-For — o último hop nunca é o que o
+    cliente enviou). Sem isso — dev sem Docker, backend exposto direto — um
+    cliente que fala com a API diretamente poderia escolher esses headers
+    livremente e contornar o limite por IP.
+    """
+    from settings import get_settings
+
+    if get_settings().trust_proxy_headers_enabled:
+        real_ip = (request.headers.get("x-real-ip") or "").strip()
+        if real_ip:
+            return real_ip
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            hops = [hop.strip() for hop in forwarded.split(",") if hop.strip()]
+            if hops:
+                return hops[-1]
     if request.client is not None and request.client.host:
         return request.client.host
     return "unknown"

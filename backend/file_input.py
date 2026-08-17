@@ -30,8 +30,14 @@ def parse_file_content(filename: str, content: bytes) -> str:
 
     try:
         text = content.decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise FileInputError(f"Não foi possível ler o arquivo como texto UTF-8: {exc}") from exc
+    except UnicodeDecodeError:
+        # Exportações do Excel/Windows em pt-BR costumam sair em cp1252, não UTF-8.
+        try:
+            text = content.decode("cp1252")
+        except UnicodeDecodeError as exc:
+            raise FileInputError(
+                f"Não foi possível ler o arquivo como texto UTF-8 ou cp1252: {exc}"
+            ) from exc
 
     if not text.strip():
         raise FileInputError("O arquivo está vazio.")

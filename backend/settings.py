@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     max_specialists: int = 2
     num_predict: int = 512
     num_predict_synthesis: int = 2048
+    ollama_timeout_seconds: int = 180
 
     transcript_clean: str = "1"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
@@ -45,6 +46,7 @@ class Settings(BaseSettings):
     allow_registration: str = ""
     auth_rate_limit: int = 20
     auth_rate_window_seconds: int = 60
+    trust_proxy_headers: str = ""
 
     @field_validator("ollama_model", "ollama_base_url", "ollama_reasoning", mode="before")
     @classmethod
@@ -70,6 +72,11 @@ class Settings(BaseSettings):
     def clamp_num_predict_synthesis(cls, value: int) -> int:
         return max(256, min(8192, value))
 
+    @field_validator("ollama_timeout_seconds")
+    @classmethod
+    def clamp_ollama_timeout_seconds(cls, value: int) -> int:
+        return max(30, min(900, value))
+
     @field_validator("auth_rate_limit")
     @classmethod
     def clamp_auth_rate_limit(cls, value: int) -> int:
@@ -87,6 +94,10 @@ class Settings(BaseSettings):
     @property
     def transcript_clean_enabled(self) -> bool:
         return str(self.transcript_clean).strip().lower() not in {"0", "false", "off", "no"}
+
+    @property
+    def trust_proxy_headers_enabled(self) -> bool:
+        return str(self.trust_proxy_headers).strip().lower() in {"1", "true", "on", "yes"}
 
     @property
     def registration_enabled(self) -> bool:
