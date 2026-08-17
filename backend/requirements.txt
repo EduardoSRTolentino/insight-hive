@@ -8,6 +8,7 @@ sqlalchemy==2.0.36
 alembic==1.14.1
 pydantic-settings==2.10.1
 pyjwt==2.13.0
+bcrypt==4.3.0
 python-dotenv==1.2.2
 ollama==0.6.2
 -e ../transcript_cleaner

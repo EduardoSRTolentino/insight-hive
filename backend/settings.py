@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     database_url: str = Field(default=f"sqlite:///{DEFAULT_DB_PATH.as_posix()}")
     max_upload_bytes: int = 5_242_880
+    allow_registration: str = ""
+    auth_rate_limit: int = 20
+    auth_rate_window_seconds: int = 60
 
     @field_validator("ollama_model", "ollama_base_url", "ollama_reasoning", mode="before")
     @classmethod
@@ -67,6 +70,16 @@ class Settings(BaseSettings):
     def clamp_num_predict_synthesis(cls, value: int) -> int:
         return max(256, min(8192, value))
 
+    @field_validator("auth_rate_limit")
+    @classmethod
+    def clamp_auth_rate_limit(cls, value: int) -> int:
+        return max(0, value)
+
+    @field_validator("auth_rate_window_seconds")
+    @classmethod
+    def clamp_auth_rate_window(cls, value: int) -> int:
+        return max(1, min(3600, value))
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
@@ -74,6 +87,15 @@ class Settings(BaseSettings):
     @property
     def transcript_clean_enabled(self) -> bool:
         return str(self.transcript_clean).strip().lower() not in {"0", "false", "off", "no"}
+
+    @property
+    def registration_enabled(self) -> bool:
+        raw = str(self.allow_registration).strip().lower()
+        if raw in {"0", "false", "off", "no"}:
+            return False
+        if raw in {"1", "true", "on", "yes"}:
+            return True
+        return self.app_env.lower() not in {"production", "prod"}
 
 
 @lru_cache(maxsize=1)

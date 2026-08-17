@@ -12,6 +12,13 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
+    # Garante deps novas (ex.: bcrypt) sem exigir rebuild da imagem a cada requirements.txt.
+    command:
+      [
+        "sh",
+        "-c",
+        "pip install -q -r requirements.txt && uvicorn api:app --reload --host 0.0.0.0 --port 8000 --reload-dir /app/backend --reload-dir /app/transcript_cleaner",
+      ]
 
   frontend:
     build:

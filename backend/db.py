@@ -53,8 +53,7 @@ def init_db() -> None:
     tables = set(inspector.get_table_names())
     config = _alembic_config()
     if "clients" in tables and "alembic_version" not in tables:
-        command.stamp(config, "head")
-        return
+        command.stamp(config, "001_initial")
     command.upgrade(config, "head")
 
 
