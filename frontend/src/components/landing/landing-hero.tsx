@@ -40,14 +40,14 @@ export function LandingHero() {
               asChild
               className="h-11 rounded-full bg-orange-600 px-6 text-white shadow-sm hover:bg-orange-700 focus-visible:ring-orange-500"
             >
-              <Link to="/login">Entrar</Link>
+              <Link to="/signup">Criar conta</Link>
             </Button>
             <Button
               asChild
               variant="outline"
               className="h-11 rounded-full border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
             >
-              <a href="#como-funciona">Como funciona</a>
+              <Link to="/login">Entrar</Link>
             </Button>
           </div>
         </div>

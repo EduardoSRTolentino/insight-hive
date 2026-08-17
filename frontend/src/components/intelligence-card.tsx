@@ -6,6 +6,8 @@ const POINT_FIELDS = [
   { key: 'ecossistema_mapeado', label: 'Ecossistema mapeado', tone: 'orange' },
   { key: 'concorrente_citado', label: 'Concorrente citado', tone: 'red' },
   { key: 'oportunidade', label: 'Oportunidade', tone: 'green' },
+  { key: 'retencao_churn', label: 'Retenção / churn', tone: 'red' },
+  { key: 'budget', label: 'Budget', tone: 'green' },
   { key: 'persona_detectada', label: 'Persona detectada', tone: 'teal' },
   { key: 'sentimento', label: 'Sentimento', tone: 'teal' },
 ] as const

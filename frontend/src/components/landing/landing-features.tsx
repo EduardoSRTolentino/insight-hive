@@ -36,7 +36,7 @@ const FEATURES = [
   {
     icon: Lock,
     title: 'Acesso autenticado',
-    body: 'Login JWT para o time interno. Sem cadastro público — só quem já tem credencial entra.',
+    body: 'Login JWT por conta. Cada analista vê só os próprios clientes e análises.',
   },
 ] as const
 

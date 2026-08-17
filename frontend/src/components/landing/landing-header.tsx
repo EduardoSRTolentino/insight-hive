@@ -11,12 +11,21 @@ export function LandingHeader() {
             <CircleIcon className="size-6 text-orange-500" />
             <span className="text-sm font-semibold text-gray-900">Insight Hive</span>
           </Link>
-          <Button
-            asChild
-            className="rounded-full bg-orange-600 px-4 text-white shadow-sm hover:bg-orange-700 focus-visible:ring-orange-500"
-          >
-            <Link to="/login">Entrar</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              variant="ghost"
+              className="rounded-full text-gray-700 hover:bg-gray-50"
+            >
+              <Link to="/login">Entrar</Link>
+            </Button>
+            <Button
+              asChild
+              className="rounded-full bg-orange-600 px-4 text-white shadow-sm hover:bg-orange-700 focus-visible:ring-orange-500"
+            >
+              <Link to="/signup">Criar conta</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </header>
