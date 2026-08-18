@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { getItem, setItem } from '@/lib/safe-storage'
 
 export const THEME_STORAGE_KEY = 'insight-hive-theme'
 
@@ -25,7 +26,7 @@ function getSystemTheme(): 'light' | 'dark' {
 }
 
 function readStoredTheme(): Theme {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY)
+  const stored = getItem(THEME_STORAGE_KEY)
   if (stored === 'light' || stored === 'dark' || stored === 'system') {
     return stored
   }
@@ -47,7 +48,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
 
   const setTheme = useCallback((next: Theme) => {
-    localStorage.setItem(THEME_STORAGE_KEY, next)
+    setItem(THEME_STORAGE_KEY, next)
     setThemeState(next)
     setResolvedTheme(applyThemeClass(next))
   }, [])

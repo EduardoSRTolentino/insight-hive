@@ -1,5 +1,6 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import axios from 'axios'
 import { Loader2 } from 'lucide-react'
 import { MeetingResult } from '@/components/meeting-result'
 import { Button } from '@/components/ui/button'
@@ -16,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import client, { apiErrorMessage } from '@/lib/api'
 import { runAnalysisUpload } from '@/lib/analysis-job'
 import { useAuth } from '@/lib/auth-context'
-import type { ClientListItem, MeetingDetail } from '@/lib/types'
+import type { AnalysisJob, ClientListItem, MeetingDetail } from '@/lib/types'
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -24,11 +25,19 @@ export default function UploadPage() {
   const [clientsLoading, setClientsLoading] = useState(true)
   const [clientId, setClientId] = useState('')
   const [loading, setLoading] = useState(false)
+  const [jobStatus, setJobStatus] = useState<AnalysisJob['status'] | null>(null)
   const [error, setError] = useState('')
   const [result, setResult] = useState<MeetingDetail | null>(null)
   const { token } = useAuth()
   const [searchParams] = useSearchParams()
   const preselected = searchParams.get('client')
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   useEffect(() => {
     if (!token) return
@@ -75,18 +84,30 @@ export default function UploadPage() {
     setError('')
     setResult(null)
     setLoading(true)
+    setJobStatus(null)
 
     const formData = new FormData()
     formData.append('file', file)
     formData.append('client_id', clientId)
 
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
-      const meeting = await runAnalysisUpload(formData)
+      const meeting = await runAnalysisUpload(formData, {
+        signal: controller.signal,
+        onStatusChange: setJobStatus,
+      })
+      if (controller.signal.aborted) return
       setResult(meeting)
     } catch (err: unknown) {
+      if (axios.isCancel(err) || controller.signal.aborted) return
       setError(apiErrorMessage(err, 'Erro ao processar o arquivo.'))
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
     }
   }
 
@@ -128,6 +149,8 @@ export default function UploadPage() {
                   id="client"
                   value={clientId}
                   onChange={(event) => setClientId(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'upload-error' : undefined}
                   className="border-input h-9 w-full rounded-full border bg-transparent px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <option value="">Selecione um cliente</option>
@@ -145,6 +168,8 @@ export default function UploadPage() {
                   id="file"
                   type="file"
                   accept=".csv,.json"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'upload-error' : undefined}
                   onChange={(event) => {
                     setFile(event.target.files?.[0] || null)
                     setResult(null)
@@ -162,7 +187,7 @@ export default function UploadPage() {
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin" />
-                    Analisando...
+                    {jobStatus === 'queued' ? 'Na fila...' : 'Analisando...'}
                   </>
                 ) : (
                   'Analisar'
@@ -174,8 +199,9 @@ export default function UploadPage() {
           {loading && (
             <div className="mt-6 space-y-3">
               <p className="text-sm text-muted-foreground">
-                A análise pode levar algum tempo, pois roda o modelo de
-                linguagem localmente. Aguarde...
+                {jobStatus === 'queued'
+                  ? 'A análise está na fila. Aguarde o início do processamento...'
+                  : 'A análise pode levar algum tempo, pois roda o modelo de linguagem localmente. Aguarde...'}
               </p>
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
@@ -183,7 +209,11 @@ export default function UploadPage() {
             </div>
           )}
 
-          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p id="upload-error" role="alert" className="mt-4 text-sm text-destructive">
+              {error}
+            </p>
+          )}
         </CardContent>
       </Card>
 

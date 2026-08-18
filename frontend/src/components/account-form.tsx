@@ -153,6 +153,8 @@ export function AccountForm(props: AccountFormProps) {
             value={values.full_name}
             onChange={update('full_name')}
             placeholder="Seu nome"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'account-form-error' : undefined}
             className={inputClassName}
           />
         </div>
@@ -166,6 +168,8 @@ export function AccountForm(props: AccountFormProps) {
             value={values.email}
             onChange={update('email')}
             placeholder="voce@empresa.com"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'account-form-error' : undefined}
             className={inputClassName}
           />
         </div>
@@ -183,6 +187,8 @@ export function AccountForm(props: AccountFormProps) {
                 value={values.password}
                 onChange={update('password')}
                 placeholder="Mínimo 8 caracteres"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'account-form-error' : undefined}
                 className={inputClassName}
               />
             </div>
@@ -197,6 +203,8 @@ export function AccountForm(props: AccountFormProps) {
                 autoComplete="new-password"
                 value={values.password_confirm}
                 onChange={update('password_confirm')}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'account-form-error' : undefined}
                 className={inputClassName}
               />
             </div>
@@ -309,7 +317,11 @@ export function AccountForm(props: AccountFormProps) {
         />
       </section>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p id="account-form-error" role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       <Button
         type="submit"

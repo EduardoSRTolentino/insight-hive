@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getItem } from '@/lib/safe-storage'
 
 export const DEFAULT_TIMEOUT_MS = 20_000
 export const ANALYSIS_UPLOAD_TIMEOUT_MS = 600_000
@@ -65,7 +66,7 @@ export function isUnauthorized(err: unknown) {
 
 client.interceptors.request.use((config) => {
   if (typeof window !== 'undefined' && !isPublicAuthUrl(config.url)) {
-    const token = localStorage.getItem('token')
+    const token = getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

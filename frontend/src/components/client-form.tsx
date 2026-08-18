@@ -144,6 +144,8 @@ export function ClientForm({
             value={values.name}
             onChange={update('name')}
             placeholder="Nome da empresa"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'client-form-error' : undefined}
             className="rounded-full"
           />
         </div>
@@ -286,7 +288,11 @@ export function ClientForm({
         />
       </section>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p id="client-form-error" role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <Button

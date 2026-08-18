@@ -71,7 +71,11 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       {!loading && !error && clients.length === 0 && (
         <Card>

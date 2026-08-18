@@ -9,6 +9,7 @@ import ClientNewPage from '@/pages/client-new'
 import ClientsPage from '@/pages/clients'
 import HomePage from '@/pages/home'
 import LoginPage from '@/pages/login'
+import NotFoundPage from '@/pages/not-found'
 import SignupPage from '@/pages/signup'
 import UploadPage from '@/pages/upload'
 
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/account" element={<AccountPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

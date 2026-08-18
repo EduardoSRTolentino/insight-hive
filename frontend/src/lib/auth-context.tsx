@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import client, { setOnUnauthorized } from '@/lib/api'
+import { getItem, removeItem, setItem } from '@/lib/safe-storage'
 import type { UserProfile, UserRegisterPayload } from '@/lib/types'
 
 type AuthContextValue = {
@@ -22,7 +23,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 function readStoredToken() {
-  return localStorage.getItem('token')
+  return getItem('token')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem('token')
+    removeItem('token')
     setToken(null)
     setUser(null)
   }, [])
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applyToken = useCallback(
     async (accessToken: string, profile?: UserProfile | null) => {
-      localStorage.setItem('token', accessToken)
+      setItem('token', accessToken)
       setToken(accessToken)
       if (profile) {
         setUser(profile)

@@ -34,3 +34,5 @@ frontend/out/
 Thumbs.db
 .idea/
 *.log
+
+.claude/

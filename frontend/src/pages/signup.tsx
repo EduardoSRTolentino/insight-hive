@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CircleIcon } from 'lucide-react'
 import { AccountForm } from '@/components/account-form'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { apiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import type { UserRegisterPayload } from '@/lib/types'
@@ -26,7 +27,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-[100dvh] flex-col justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-xl">
         <Link
           to="/"

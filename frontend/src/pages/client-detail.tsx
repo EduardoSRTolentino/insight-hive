@@ -169,7 +169,11 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="mb-4 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       {detail && (
         <>

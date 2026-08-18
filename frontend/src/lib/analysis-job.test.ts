@@ -1,5 +1,5 @@
 import MockAdapter from 'axios-mock-adapter'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { analysisJobOptions, runAnalysisUpload } from '@/lib/analysis-job'
 import client from '@/lib/api'
 import type { AnalysisJob, MeetingDetail } from '@/lib/types'
@@ -47,9 +47,15 @@ describe('runAnalysisUpload', () => {
 
     const form = new FormData()
     form.append('client_id', '1')
-    const result = await runAnalysisUpload(form)
+    const onStatusChange = vi.fn()
+    const result = await runAnalysisUpload(form, { onStatusChange })
     expect(result.triage).toBe('Cliente em avaliação.')
     expect(result.id).toBe(9)
+    expect(onStatusChange.mock.calls.map((call) => call[0])).toEqual([
+      'queued',
+      'running',
+      'done',
+    ])
   })
 
   it('throws the job error_detail when the analysis fails', async () => {
@@ -58,5 +64,24 @@ describe('runAnalysisUpload', () => {
       job({ status: 'failed', error_detail: 'Ollama fora do ar.' }),
     )
     await expect(runAnalysisUpload(new FormData())).rejects.toThrow('Ollama fora do ar.')
+  })
+
+  it('tolerates a couple of transient poll failures', async () => {
+    mock.onPost('/analysis/upload').reply(202, job({ status: 'queued' }))
+    mock.onGet('/analysis/jobs/3').networkErrorOnce()
+    mock.onGet('/analysis/jobs/3').replyOnce(502)
+    mock.onGet('/analysis/jobs/3').replyOnce(200, job({ status: 'done', meeting }))
+
+    const result = await runAnalysisUpload(new FormData())
+    expect(result.id).toBe(9)
+  })
+
+  it('gives up after too many consecutive poll failures', async () => {
+    mock.onPost('/analysis/upload').reply(202, job({ status: 'queued' }))
+    mock.onGet('/analysis/jobs/3').networkError()
+
+    await expect(runAnalysisUpload(new FormData())).rejects.toThrow(
+      'Não foi possível acompanhar a análise. Confira o histórico do cliente — ela pode ter concluído mesmo assim.',
+    )
   })
 })
